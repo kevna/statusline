@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, PropertyMock, call
 from types import SimpleNamespace
 
-from git import Git, AheadBehind, Status
+from statusline.git import Git, AheadBehind, Status
 
 
 class Test_Git(unittest.TestCase):
@@ -14,7 +14,7 @@ class Test_Git(unittest.TestCase):
                 (["stash", "list", "--porcelain"], SimpleNamespace(stdout=b"stash@{0}\nstash@{1}\n"), "stash@{0}\nstash@{1}\n", call(["git", "stash", "list", "--porcelain"], check=True, capture_output=True)),
         ]
         for cmd, mock, expectedReturn, expectedCall in tests:
-            with patch("git.run", return_value=mock) as mock:
+            with patch("statusline.git.run", return_value=mock) as mock:
                 self.assertEqual(expectedReturn, self.instance._run_command(cmd))
                 mock.assert_has_calls([expectedCall])
 
@@ -23,29 +23,29 @@ class Test_Git(unittest.TestCase):
             (["stash", "list", "--porcelain"], "stash@{0}\nstash@{1}\n", 2),
         ]
         for cmd, mock, expected in tests:
-            with patch("git.Git._run_command", return_value=mock) as mock:
+            with patch("statusline.git.Git._run_command", return_value=mock) as mock:
                 self.assertEqual(expected, self.instance._count(cmd))
                 mock.assert_called_once_with(cmd)
 
-    @patch("git.Git._run_command", return_value="~/.local/chezmoi\n")
+    @patch("statusline.git.Git._run_command", return_value="~/.local/chezmoi\n")
     def test_root_dir_cached(self, mock):
         self.instance._root = "/path/"
         self.assertEqual("/path/", self.instance.root_dir)
         mock.assert_not_called()
 
-    @patch("git.Git._run_command", return_value="~/.local/chezmoi\n")
+    @patch("statusline.git.Git._run_command", return_value="~/.local/chezmoi\n")
     def test_root_dir_calculate(self, mock):
         self.assertEqual("~/.local/chezmoi", self.instance.root_dir)
         mock.assert_called_once_with(["rev-parse", "--show-toplevel"])
 
-    @patch("git.Git._run_command", return_value="  master  ")
+    @patch("statusline.git.Git._run_command", return_value="  master  ")
     def test_branch(self, mock):
         self.assertEqual("master", self.instance.branch)
         mock.assert_called_once_with(
             ["rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD"]
         )
 
-    @patch("git.path.getmtime", return_value=1604363715.999)
+    @patch("statusline.git.path.getmtime", return_value=1604363715.999)
     def test_last_fetch(self, mock):
         self.instance._root = "root"
         self.assertEqual(1604363715, self.instance.last_fetch)
@@ -59,8 +59,8 @@ class Test_Git(unittest.TestCase):
                 (False, None, False),
                 ]
         for exists, root, expected in tests:
-            with patch("git.path.exists", return_value=exists) as mockExists, \
-                patch("git.Git.root_dir", new_callable=PropertyMock, return_value=root) as mockRoot:
+            with patch("statusline.git.path.exists", return_value=exists) as mockExists, \
+                patch("statusline.git.Git.root_dir", new_callable=PropertyMock, return_value=root) as mockRoot:
                 self.assertEqual(expected, self.instance.has_vcs())
                 mockExists.called_once_with(".git")
 
@@ -70,7 +70,7 @@ class Test_Git(unittest.TestCase):
             ([5, 10], (5, 10)),
         ]
         for porcelain, expected in tests:
-            with patch("git.Git._count", side_effect=porcelain) as mock:
+            with patch("statusline.git.Git._count", side_effect=porcelain) as mock:
                 self.assertEqual(expected, self.instance.ahead_behind())
                 mock.assert_has_calls(
                     [
@@ -85,11 +85,11 @@ class Test_Git(unittest.TestCase):
             ("?? untrack.ed\nM  stag.ed\n M unstag.ed", (1, 1, 1)),
         ]
         for porcelain, expected in tests:
-            with patch("git.Git._run_command", return_value=porcelain) as mock:
+            with patch("statusline.git.Git._run_command", return_value=porcelain) as mock:
                 self.assertEqual(expected, self.instance.status())
                 mock.assert_called_once_with(["status", "--porcelain"])
 
-    @patch("git.Git._count", return_value=1)
+    @patch("statusline.git.Git._count", return_value=1)
     def test_stashes(self, mock):
         self.assertEqual(1, self.instance.stashes())
         mock.assert_called_once_with(["stash", "list", "--porcelain"])
@@ -121,13 +121,13 @@ class Test_Git(unittest.TestCase):
         ]
         for branch, ab, status, stashes, expected in tests:
             with patch(
-                "git.Git.branch", new_callable=PropertyMock, return_value=branch
+                "statusline.git.Git.branch", new_callable=PropertyMock, return_value=branch
             ) as mockBranch, patch(
-                "git.Git.ahead_behind", return_value=ab
+                "statusline.git.Git.ahead_behind", return_value=ab
             ) as mockAB, patch(
-                "git.Git.status", return_value=status
+                "statusline.git.Git.status", return_value=status
             ) as mockStatus, patch(
-                "git.Git.stashes", return_value=stashes
+                "statusline.git.Git.stashes", return_value=stashes
             ) as mockStashes:
                 self.assertEqual(expected, self.instance.short_stats())
 

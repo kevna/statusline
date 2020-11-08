@@ -2,7 +2,7 @@
 import os
 import re
 
-from git import Git
+from .git import Git
 
 class DirectoryMinify(object):
     VCS = Git()

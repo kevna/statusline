@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, Mock, call
 
-from status import DirectoryMinify
-from git import Git
+from statusline.status import DirectoryMinify
+from statusline.git import Git
 
 class Test_DirectoryMinify(unittest.TestCase):
     def setUp(self):
@@ -18,7 +18,7 @@ class Test_DirectoryMinify(unittest.TestCase):
         for name, expected in tests:
             self.assertEqual(expected, self.instance._minify_dir(name))
 
-    @patch("status.DirectoryMinify.hi", side_effect=lambda x: x)
+    @patch("statusline.status.DirectoryMinify.hi", side_effect=lambda x: x)
     def test_minify_path(self, mock):
         tests = [
                 ("~", "~"),
@@ -28,7 +28,7 @@ class Test_DirectoryMinify(unittest.TestCase):
         for path, expected in tests:
             self.assertEqual(expected, self.instance.minify_path(path))
 
-    @patch("status.DirectoryMinify.hi", side_effect=lambda x: x)
+    @patch("statusline.status.DirectoryMinify.hi", side_effect=lambda x: x)
     def test_minify_path_home(self, mock):
         tests = [
                 ("/home/kevna", "~"),
@@ -43,7 +43,7 @@ class Test_DirectoryMinify(unittest.TestCase):
                         )
                     )
 
-    @patch("status.DirectoryMinify.minify_path", side_effect=["~/.l/s/chezmoi", "/p/i3"])
+    @patch("statusline.status.DirectoryMinify.minify_path", side_effect=["~/.l/s/chezmoi", "/p/i3"])
     def test__apply_vcs(self, mockMinify):
         self.instance.VCS = Mock(spec=Git)
         self.instance.VCS.root_dir = "/home/kevna/.local/share/chezmoi"
@@ -51,17 +51,17 @@ class Test_DirectoryMinify(unittest.TestCase):
         self.assertEqual("~/.l/s/chezmoi\uE0A0master/p/i3", self.instance._apply_vcs("/home/kevna/.local/share/chezmoi/private_dot_config/i3"))
         mockMinify.assert_has_calls([call("/home/kevna/.local/share/chezmoi"), call("/private_dot_config/i3")])
 
-    @patch("status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
-    @patch("status.Git.has_vcs", return_value=True)
-    @patch("status.DirectoryMinify._apply_vcs", return_value="~/.l/s/chezmoi")
+    @patch("statusline.status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
+    @patch("statusline.status.Git.has_vcs", return_value=True)
+    @patch("statusline.status.DirectoryMinify._apply_vcs", return_value="~/.l/s/chezmoi")
     def test_get_statusline_git(self, mockMinify, mockVCS, mockCWD):
         self.assertEqual(mockMinify.return_value, self.instance.get_statusline())
         mockVCS.assert_called_once_with()
         mockMinify.assert_called_once_with(mockCWD.return_value)
 
-    @patch("status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
-    @patch("status.Git.has_vcs", return_value=False)
-    @patch("status.DirectoryMinify.minify_path", return_value="~/.l/s/chezmoi")
+    @patch("statusline.status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
+    @patch("statusline.status.Git.has_vcs", return_value=False)
+    @patch("statusline.status.DirectoryMinify.minify_path", return_value="~/.l/s/chezmoi")
     def test_get_statusline_nogit(self, mockMinify, mockVCS, mockCWD):
         self.assertEqual(mockMinify.return_value, self.instance.get_statusline())
         mockVCS.assert_called_once_with()
