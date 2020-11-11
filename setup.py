@@ -8,4 +8,6 @@ setup(name = "statusline",
             "console_scripts": [
                 "statusline = statusline.__main__:main"
             ]
-        })
+        },
+        install_requires = ["ansi"]
+        )

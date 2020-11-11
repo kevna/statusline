@@ -2,6 +2,8 @@
 import os
 import re
 
+from ansi.colour import fg
+
 from .git import Git
 
 class DirectoryMinify(object):
@@ -14,7 +16,7 @@ class DirectoryMinify(object):
         return name
 
     def hi(self, text):
-        return "\033[94m%s\033[m" % text
+        return fg.brightblue(text)
 
     def minify_path(self, path: str, home=os.path.expanduser("~"), keep = 1):
         pathlist = path.replace(home, "~", 1).split(os.sep)

@@ -4,6 +4,8 @@ from subprocess import run, CalledProcessError
 from collections import namedtuple, defaultdict
 from typing import Optional
 
+from ansi.colour import fg, bg, fx
+
 AheadBehind = namedtuple("AheadBehind", ("ahead", "behind"), defaults=(0, 0))
 Status = namedtuple(
         "Status",
@@ -91,7 +93,7 @@ class Git(object):
         result = ["\uE0A0", self.branch]
         ab = self.ahead_behind()
         if ab.ahead and ab.behind:
-            result.append("\033[91;7m↕%d\033[m" % sum(ab))
+            result.append(bg.brightred("↕%d" % sum(ab)))
         elif ab.ahead:
             result.append("↑%d" % ab.ahead)
         elif ab.behind:
@@ -100,16 +102,16 @@ class Git(object):
         if sum(status):
             result.append("(")
             if status.staged:
-                result.append("\033[32m%d" % status.staged)
+                result.extend([fg.green, status.staged])
             if status.unstaged:
-                result.append("\033[31m%d" % status.unstaged)
+                result.extend([fg.red, status.unstaged])
             if status.untracked:
-                result.append("\033[90m%d" % status.untracked)
-            result.append("\033[m)")
+                result.extend([fg.brightblack, status.untracked])
+            result.extend([fx.reset, ")"])
         stashes = self.stashes()
         if stashes:
             result.append("{%d}" % stashes)
-        return "".join(result)
+        return "".join(map(str, result))
 
 
 if __name__ == "__main__":
