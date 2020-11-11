@@ -4,7 +4,7 @@ from subprocess import run, CalledProcessError
 from collections import namedtuple, defaultdict
 from typing import Optional
 
-from ansi.colour import fg, bg, fx
+from ansi.colour import fg, bg, fx, rgb
 
 AheadBehind = namedtuple("AheadBehind", ("ahead", "behind"), defaults=(0, 0))
 Status = namedtuple(
@@ -90,10 +90,11 @@ class Git(object):
         return self._count(["stash", "list", "--porcelain"])
 
     def short_stats(self) -> str:
-        result = ["\uE0A0", self.branch]
+        # branch logo in git color #f14e32 (colour 202 is ideal)
+        result = [rgb.rgb256(241, 78, 50), "\uE0A0", fx.reset, self.branch]
         ab = self.ahead_behind()
         if ab.ahead and ab.behind:
-            result.append(bg.brightred("↕%d" % sum(ab)))
+            result.extend([fg.black+bg.brightred, "↕%d" % sum(ab), fx.reset])
         elif ab.ahead:
             result.append("↑%d" % ab.ahead)
         elif ab.behind:

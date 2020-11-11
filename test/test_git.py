@@ -94,29 +94,31 @@ class Test_Git(unittest.TestCase):
         self.assertEqual(1, self.instance.stashes())
         mock.assert_called_once_with(["stash", "list", "--porcelain"])
 
-    def test_short_stats(self):
+    # TODO should we mock more of the ansi calls here?
+    @patch("statusline.git.rgb.rgb256", return_value="")
+    def test_short_stats(self, mockRGB):
         tests = [
-            ("master", AheadBehind(0, 0), Status(0, 0, 0), 0, "\uE0A0master"),
+            ("master", AheadBehind(0, 0), Status(0, 0, 0), 0, "\uE0A0\033[0mmaster"),
             (
                 "master",
                 AheadBehind(1, 0),
                 Status(3, 2, 0),
                 0,
-                "\uE0A0master↑1(\033[32m3\033[31m2\033[m)",
+                "\uE0A0\033[0mmaster↑1(\033[32m3\033[31m2\033[0m)",
             ),
             (
                 "master",
                 AheadBehind(0, 1),
                 Status(0, 0, 5),
                 0,
-                "\uE0A0master↓1(\033[90m5\033[m)",
+                "\uE0A0\033[0mmaster↓1(\033[90m5\033[0m)",
             ),
             (
                 "master",
                 AheadBehind(3, 2),
                 Status(0, 0, 0),
                 1,
-                "\uE0A0master\033[91;7m↕5\033[m{1}",
+                "\uE0A0\033[0mmaster\033[30;101m↕5\033[0m{1}",
             ),
         ]
         for branch, ab, status, stashes, expected in tests:
