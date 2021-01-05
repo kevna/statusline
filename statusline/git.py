@@ -87,7 +87,7 @@ class Git(object):
         return Status(**result)
 
     def stashes(self) -> int:
-        return self._count(["stash", "list", "--porcelain"])
+        return self._count(["stash", "list"])
 
     def short_stats(self) -> str:
         # branch logo in git color #f14e32 (colour 202 is ideal)
