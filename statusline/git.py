@@ -27,10 +27,12 @@ class Git(object):
         except CalledProcessError as e:
             return None
 
-    def _count(self, command: list) -> int:
-        results = self._run_command(command).split("\n")
-        results.remove("")
-        return len(results)
+    def _count(self, command: list) -> Optional[int]:
+        results = self._run_command(command)
+        if results:
+            results = results.split("\n")
+            results.remove("")
+            return len(results)
 
     @property
     def root_dir(self) -> Optional[str]:

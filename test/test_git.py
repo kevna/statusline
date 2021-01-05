@@ -21,6 +21,7 @@ class Test_Git(unittest.TestCase):
     def test__count(self):
         tests = [
             (["stash", "list"], "stash@{0}\nstash@{1}\n", 2),
+            (["stash", "list", "--porcelain"], None, None),
         ]
         for cmd, mock, expected in tests:
             with patch("statusline.git.Git._run_command", return_value=mock) as mock:
