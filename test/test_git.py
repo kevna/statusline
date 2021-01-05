@@ -20,7 +20,8 @@ class Test_Git(unittest.TestCase):
 
     def test__count(self):
         tests = [
-            (["stash", "list", "--porcelain"], "stash@{0}\nstash@{1}\n", 2),
+            (["stash", "list"], "stash@{0}\nstash@{1}\n", 2),
+            (["stash", "list", "--porcelain"], None, None),
         ]
         for cmd, mock, expected in tests:
             with patch("statusline.git.Git._run_command", return_value=mock) as mock:
@@ -92,7 +93,7 @@ class Test_Git(unittest.TestCase):
     @patch("statusline.git.Git._count", return_value=1)
     def test_stashes(self, mock):
         self.assertEqual(1, self.instance.stashes())
-        mock.assert_called_once_with(["stash", "list", "--porcelain"])
+        mock.assert_called_once_with(["stash", "list"])
 
     # TODO should we mock more of the ansi calls here?
     @patch("statusline.git.rgb.rgb256", return_value="")
