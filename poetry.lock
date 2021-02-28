@@ -1,0 +1,17 @@
+[[package]]
+name = "ansi"
+version = "0.1.5"
+description = "ANSI cursor movement and graphics"
+category = "main"
+optional = false
+python-versions = "*"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "~3"
+content-hash = "cf5f9fabf1e2d931f17816cfa7ab2a36de1870077fa09b0d53706d943a1ba527"
+
+[metadata.files]
+ansi = [
+    {file = "ansi-0.1.5.tar.gz", hash = "sha256:0e5ca4681479e3159c89dfdfa90ed7794437ffaf956afba9b72697d297b6530b"},
+]
