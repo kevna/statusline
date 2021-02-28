@@ -1,6 +1,11 @@
 # TODO
 Features for the future
 
+- [ ] add octal 1 and 2 around color escapes
+  - this will avoid the escapes messing with line length
+- [ ] add development venv
+  - [ ] use pylint and mypy to enforce coding standards
+  - [ ] move to pytest going forward
 - [ ] require a github pipeline before reintegration
   - this will require setting up a CI tool to run the tests
   - [ ] we should also check coverage

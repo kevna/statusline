@@ -18,6 +18,8 @@ class Git(object):
         self._root = None
 
     def _run_command(self, command: list) -> Optional[str]:
+        """Run command and handle failures quietly.
+        """
         try:
             return run(
                     ["git"] + command,
@@ -28,6 +30,7 @@ class Git(object):
             return None
 
     def _count(self, command: list) -> Optional[int]:
+        """Helper to count the number of records returned from _run_command."""
         results = self._run_command(command)
         if results:
             results = results.split("\n")
@@ -36,6 +39,11 @@ class Git(object):
 
     @property
     def root_dir(self) -> Optional[str]:
+        """Property for the root directory.
+
+        This is only generated once so if we
+        change repo with this instance it would be wrong.
+        """
         if not self._root:
             try:
                 self._root = self._run_command(
@@ -47,15 +55,15 @@ class Git(object):
 
     @property
     def branch(self) -> Optional[str]:
+        """Property for the current branch name."""
         return self._run_command(
                 ["rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD"]
                 ).strip()
 
     @property
     def last_fetch(self) -> int:
-        """
-        Get the timestamp of the last git fetch
-        this information could be used to:
+        """Get the timestamp of the last git fetch.
+        This information could be used to:
             * run a fetch anytime >3h old †
             * colourise short_stats as a reminder to fetch
 
@@ -66,15 +74,21 @@ class Git(object):
         return int(path.getmtime(path.join(self.root_dir, ".git/FETCH_HEAD")))
 
     def has_vcs(self) -> bool:
+        """Simple check for being in a git repo.
+        Testing for .git is faster but only works in project root
+        alernatively we'll use the git tool.
+        """
         return path.exists(".git") \
                 or bool(self.root_dir)
 
     def ahead_behind(self) -> AheadBehind:
+        """Count unsynched commits between current branch and it's remote."""
         ahead = self._count(["rev-list", "@{u}..HEAD"])
         behind = self._count(["rev-list", "HEAD..@{u}"])
         return AheadBehind(ahead, behind)
 
     def status(self) -> Status:
+        """Count the number of changes files in the various statuses git tracks."""
         output = self._run_command(["status", "--porcelain"])
         result = defaultdict(int)
         for line in output.split("\n"):
@@ -89,9 +103,13 @@ class Git(object):
         return Status(**result)
 
     def stashes(self) -> int:
+        """Count the number of records in the git stash."""
         return self._count(["stash", "list"])
 
     def short_stats(self) -> str:
+        """Generate a short text summary of the repository status.
+        Colour coding is done with terminal escapes.
+        """
         # branch logo in git color #f14e32 (colour 202 is ideal)
         result = [rgb.rgb256(241, 78, 50), "\uE0A0", fx.reset, self.branch]
         ab = self.ahead_behind()
