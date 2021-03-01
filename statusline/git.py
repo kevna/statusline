@@ -13,20 +13,21 @@ Status = namedtuple(
         defaults=(0, 0, 0)
         )
 
-class Git(object):
+class Git:
+    """Get information about the status of the current git repository."""
+
     def __init__(self):
         self._root = None
 
     def _run_command(self, command: list) -> Optional[str]:
-        """Run command and handle failures quietly.
-        """
+        """Run command and handle failures quietly."""
         try:
             return run(
                     ["git"] + command,
                     check=True,
                     capture_output=True
                     ).stdout.decode("utf-8")
-        except CalledProcessError as e:
+        except CalledProcessError:
             return None
 
     def _count(self, command: list) -> Optional[int]:
@@ -49,7 +50,7 @@ class Git(object):
                 self._root = self._run_command(
                         ["rev-parse", "--show-toplevel"]
                         ).strip()
-            except AttributeError as e:
+            except AttributeError:
                 pass
         return self._root
 
@@ -112,13 +113,13 @@ class Git(object):
         """
         # branch logo in git color #f14e32 (colour 202 is ideal)
         result = [rgb.rgb256(241, 78, 50), "\uE0A0", fx.reset, self.branch]
-        ab = self.ahead_behind()
-        if ab.ahead and ab.behind:
-            result.extend([fg.black+bg.brightred, "↕%d" % sum(ab), fx.reset])
-        elif ab.ahead:
-            result.append("↑%d" % ab.ahead)
-        elif ab.behind:
-            result.append("↓%d" % ab.behind)
+        ahead_behind = self.ahead_behind()
+        if ahead_behind.ahead and ahead_behind.behind:
+            result.extend([fg.black+bg.brightred, "↕%d" % sum(ahead_behind), fx.reset])
+        elif ahead_behind.ahead:
+            result.append("↑%d" % ahead_behind.ahead)
+        elif ahead_behind.behind:
+            result.append("↓%d" % ahead_behind.behind)
         status = self.status()
         if sum(status):
             result.append("(")

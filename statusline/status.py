@@ -4,12 +4,12 @@ import re
 
 from ansi.colour import fg
 
-from .git import Git
+from statusline.git import Git
 
-class DirectoryMinify(object):
+class DirectoryMinify:
     VCS = Git()
 
-    def _minify_dir(self, name: str, regex=re.compile("^(\W*\w)")):
+    def _minify_dir(self, name: str, regex=re.compile(r"^(\W*\w)")):
         """Shorten a string to the first group that matches regex."""
         match = regex.match(name)
         if match:
