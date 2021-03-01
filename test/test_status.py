@@ -8,9 +8,9 @@ from statusline.git import Git
 
 @pytest.fixture()
 def instance():
-    instance = DirectoryMinify()
-    instance.VCS = Mock(spec=Git)
-    return instance
+    result = DirectoryMinify()
+    result.VCS = Mock(spec=Git)
+    return result
 
 
 @pytest.mark.parametrize("name, expected", (
@@ -46,29 +46,32 @@ def test_minify_path_home(mock, path, expected, instance):
 
 
 @patch("statusline.status.DirectoryMinify.minify_path", side_effect=["~/.l/s/chezmoi", "/p/i3"])
-def test__apply_vcs(mockMinify, instance):
+def test__apply_vcs(mock_minify, instance):
     instance.VCS.root_dir = "/home/kevna/.local/share/chezmoi"
     instance.VCS.short_stats.return_value = "\uE0A0master"
     actual = instance._apply_vcs("/home/kevna/.local/share/chezmoi/private_dot_config/i3")
     assert actual == "~/.l/s/chezmoi\uE0A0master/p/i3"
-    mockMinify.assert_has_calls([call("/home/kevna/.local/share/chezmoi"), call("/private_dot_config/i3")])
+    mock_minify.assert_has_calls([
+        call("/home/kevna/.local/share/chezmoi"),
+        call("/private_dot_config/i3")
+    ])
 
 
 @patch("statusline.status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
 @patch("statusline.status.DirectoryMinify._apply_vcs", return_value="~/.l/s/chezmoi")
-def test_get_statusline_git(mockMinify, mockCWD, instance):
+def test_get_statusline_git(mock_minify, mock_cwd, instance):
     instance.VCS.has_vcs.return_value = True
     actual = instance.get_statusline()
-    assert actual == mockMinify.return_value
+    assert actual == mock_minify.return_value
     assert instance.VCS.has_vcs.called
-    mockMinify.assert_called_once_with(mockCWD.return_value)
+    mock_minify.assert_called_once_with(mock_cwd.return_value)
 
 
 @patch("statusline.status.os.getcwd", return_value="/home/kevna/.local/share/chezmoi")
 @patch("statusline.status.DirectoryMinify.minify_path", return_value="~/.l/s/chezmoi")
-def test_get_statusline_nogit(mockMinify, mockCWD, instance):
+def test_get_statusline_nogit(mock_minify, mock_cwd, instance):
     instance.VCS.has_vcs.return_value = False
     actual = instance.get_statusline()
-    assert actual == mockMinify.return_value
+    assert actual == mock_minify.return_value
     assert instance.VCS.has_vcs.called
-    mockMinify.assert_called_once_with(mockCWD.return_value)
+    mock_minify.assert_called_once_with(mock_cwd.return_value)

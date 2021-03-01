@@ -11,7 +11,7 @@ def instance():
     return Git()
 
 
-@pytest.mark.parametrize("cmd, mock, expectedReturn, expectedCall", (
+@pytest.mark.parametrize("cmd, mock, expected_return, expected_call", (
     (
         ["stash", "list", "--porcelain"],
         SimpleNamespace(stdout=b"stash@{0}\nstash@{1}\n"),
@@ -19,11 +19,11 @@ def instance():
         call(["git", "stash", "list", "--porcelain"], check=True, capture_output=True)
     ),
 ))
-def test__run_command(cmd, mock, expectedReturn, expectedCall, instance):
+def test__run_command(cmd, mock, expected_return, expected_call, instance):
     with patch("statusline.git.run", return_value=mock) as mock:
         actual = instance._run_command(cmd)
-        assert actual == expectedReturn
-        assert mock.call_args == expectedCall
+        assert actual == expected_return
+        assert mock.call_args == expected_call
 
 
 @pytest.mark.parametrize("cmd, mock, expected", (
@@ -72,11 +72,11 @@ def test_last_fetch(mock, instance):
     (False, None, False),
 ))
 def test_has_vcs(exists, root, expected, instance):
-    with patch("statusline.git.path.exists", return_value=exists) as mockExists, \
-        patch("statusline.git.Git.root_dir", new_callable=PropertyMock, return_value=root) as mockRoot:
+    with patch("statusline.git.path.exists", return_value=exists) as mock_exists, \
+        patch("statusline.git.Git.root_dir", new_callable=PropertyMock, return_value=root):
         actual = instance.has_vcs()
         assert actual == expected
-        mockExists.called_once_with(".git")
+        mock_exists.called_once_with(".git")
 
 
 @pytest.mark.parametrize("porcelain, expected", (
@@ -137,15 +137,15 @@ def test_stashes(mock, instance):
 ))
 # TODO should we mock more of the ansi calls here?
 @patch("statusline.git.rgb.rgb256", return_value="")
-def test_short_stats(mockRGB, branch, ab, status, stashes, expected, instance):
-        with patch(
-            "statusline.git.Git.branch", new_callable=PropertyMock, return_value=branch
-        ) as mockBranch, patch(
-            "statusline.git.Git.ahead_behind", return_value=ab
-        ) as mockAB, patch(
-            "statusline.git.Git.status", return_value=status
-        ) as mockStatus, patch(
-            "statusline.git.Git.stashes", return_value=stashes
-        ) as mockStashes:
-            actual = instance.short_stats()
-            assert actual == expected
+def test_short_stats(mock, branch, ab, status, stashes, expected, instance):
+    with patch(
+        "statusline.git.Git.branch", new_callable=PropertyMock, return_value=branch
+    ), patch(
+        "statusline.git.Git.ahead_behind", return_value=ab
+    ), patch(
+        "statusline.git.Git.status", return_value=status
+    ), patch(
+        "statusline.git.Git.stashes", return_value=stashes
+    ):
+        actual = instance.short_stats()
+        assert actual == expected
