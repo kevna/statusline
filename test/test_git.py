@@ -6,7 +6,7 @@ import pytest
 from statusline.git import Git, AheadBehind, Status
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def instance():
     return Git()
 
@@ -46,7 +46,6 @@ def test_root_dir_cached(mock, instance):
 
 @patch("statusline.git.Git._run_command", return_value="~/.local/chezmoi\n")
 def test_root_dir_calculate(mock, instance):
-    instance._root = None
     assert instance.root_dir == "~/.local/chezmoi"
     assert mock.call_args == call(["rev-parse", "--show-toplevel"])
 

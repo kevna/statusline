@@ -6,7 +6,7 @@ from statusline.status import DirectoryMinify
 from statusline.git import Git
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def instance():
     instance = DirectoryMinify()
     instance.VCS = Mock(spec=Git)
