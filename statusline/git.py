@@ -19,43 +19,35 @@ class Git:
     def __init__(self):
         self._root = None
 
-    def _run_command(self, command: list) -> Optional[str]:
+    def _run_command(self, command: list) -> str:
         """Run command and handle failures quietly."""
-        try:
-            return run(
-                    ["git"] + command,
-                    check=True,
-                    capture_output=True
-                    ).stdout.decode("utf-8")
-        except CalledProcessError:
-            return None
+        return run(
+                ["git"] + command,
+                check=True,
+                capture_output=True
+                ).stdout.decode("utf-8")
 
-    def _count(self, command: list) -> Optional[int]:
+    def _count(self, command: list) -> int:
         """Helper to count the number of records returned from _run_command."""
-        results = self._run_command(command)
-        if results:
-            results = results.split("\n")
-            results.remove("")
-            return len(results)
+        rows = self._run_command(command).split("\n")
+        rows.remove("")
+        return len(rows)
 
     @property
-    def root_dir(self) -> Optional[str]:
+    def root_dir(self) -> str:
         """Property for the root directory.
 
         This is only generated once so if we
         change repo with this instance it would be wrong.
         """
         if not self._root:
-            try:
-                self._root = self._run_command(
-                        ["rev-parse", "--show-toplevel"]
-                        ).strip()
-            except AttributeError:
-                pass
+            self._root = self._run_command(
+                    ["rev-parse", "--show-toplevel"]
+                    ).strip()
         return self._root
 
     @property
-    def branch(self) -> Optional[str]:
+    def branch(self) -> str:
         """Property for the current branch name."""
         return self._run_command(
                 ["rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD"]
@@ -91,7 +83,7 @@ class Git:
     def status(self) -> Status:
         """Count the number of changes files in the various statuses git tracks."""
         output = self._run_command(["status", "--porcelain"])
-        result = defaultdict(int)
+        result: dict = defaultdict(int)
         for line in output.split("\n"):
             if line:
                 if line.startswith("??"):

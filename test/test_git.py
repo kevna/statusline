@@ -27,8 +27,8 @@ def test__run_command(cmd, mock, expected_return, expected_call, instance):
 
 
 @pytest.mark.parametrize("cmd, mock, expected", (
+    (["stash", "list"], "", 0),
     (["stash", "list"], "stash@{0}\nstash@{1}\n", 2),
-    (["stash", "list", "--porcelain"], None, None),
 ))
 def test__count(cmd, mock, expected, instance):
     with patch("statusline.git.Git._run_command", return_value=mock) as mock:
