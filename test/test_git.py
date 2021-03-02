@@ -1,4 +1,5 @@
 from unittest.mock import patch, PropertyMock, call
+from subprocess import CalledProcessError
 from types import SimpleNamespace
 
 import pytest
@@ -91,6 +92,13 @@ def test_ahead_behind(porcelain, expected, instance):
             call(['rev-list', '@{u}..HEAD']),
             call(['rev-list', 'HEAD..@{u}']),
         ]
+
+
+def test_ahead_behind_noupstream(instance):
+    with patch('statusline.git.Git._count', side_effect=CalledProcessError(128, '')) as mock:
+        actual = instance.ahead_behind()
+        assert actual == (0, 0)
+        assert mock.call_args == call(['rev-list', '@{u}..HEAD'])
 
 
 @pytest.mark.parametrize('porcelain, expected', (
