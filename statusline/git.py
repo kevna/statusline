@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 from os import path
-from subprocess import run, CalledProcessError
+from subprocess import run
 from collections import namedtuple, defaultdict
-from typing import Optional
 
 from ansi.colour import fg, bg, fx, rgb
 
