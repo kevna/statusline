@@ -4,12 +4,12 @@ import re
 
 from ansi.colour import fg
 
-from .git import Git
+from statusline.git import Git
 
-class DirectoryMinify(object):
+class DirectoryMinify:
     VCS = Git()
 
-    def _minify_dir(self, name: str, regex=re.compile("^(\W*\w)")):
+    def _minify_dir(self, name: str, regex=re.compile(r'^(\W*\w)')):
         """Shorten a string to the first group that matches regex."""
         match = regex.match(name)
         if match:
@@ -19,11 +19,11 @@ class DirectoryMinify(object):
     def hi(self, text):
         return fg.brightblue(text)
 
-    def minify_path(self, path: str, home=os.path.expanduser("~"), keep = 1):
+    def minify_path(self, path: str, home=os.path.expanduser('~'), keep = 1):
         """Minify a path string.
         Substitutes home to ~. Each name is then reduced with _minify_dir.
         """
-        pathlist = path.replace(home, "~", 1).split(os.sep)
+        pathlist = path.replace(home, '~', 1).split(os.sep)
         if len(pathlist) > keep:
             pathlist = list(map(self._minify_dir, pathlist[:-keep])) + pathlist[-keep:]
         return self.hi(os.sep.join(pathlist))
@@ -43,5 +43,5 @@ class DirectoryMinify(object):
         return self.minify_path(path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print(DirectoryMinify().get_statusline())
