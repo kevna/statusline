@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from os import path
-from subprocess import run
+from subprocess import run, CalledProcessError
 from collections import namedtuple, defaultdict
 
 from ansi.colour import fg, bg, fx, rgb
@@ -75,8 +75,12 @@ class Git:
 
     def ahead_behind(self) -> AheadBehind:
         """Count unsynched commits between current branch and it's remote."""
-        ahead = self._count(['rev-list', '@{u}..HEAD'])
-        behind = self._count(['rev-list', 'HEAD..@{u}'])
+        try:
+            ahead = self._count(['rev-list', '@{u}..HEAD'])
+            behind = self._count(['rev-list', 'HEAD..@{u}'])
+        except CalledProcessError:
+            # This occurs if there's no upstream repo to compare.
+            return AheadBehind()
         return AheadBehind(ahead, behind)
 
     def status(self) -> Status:
