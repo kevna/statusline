@@ -70,8 +70,11 @@ class Git:
         Testing for .git is faster but only works in project root
         alernatively we'll use the git tool.
         """
-        return path.exists('.git') \
-                or bool(self.root_dir)
+        try:
+            return path.exists('.git') \
+                    or bool(self.root_dir)
+        except CalledProcessError:
+            return False
 
     def ahead_behind(self) -> AheadBehind:
         """Count unsynched commits between current branch and it's remote."""
