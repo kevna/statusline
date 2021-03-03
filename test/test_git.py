@@ -80,6 +80,13 @@ def test_has_vcs(exists, root, expected, instance):
         mock_exists.called_once_with('.git')
 
 
+def test_has_vcs_error(instance):
+    with patch('statusline.git.path.exists', return_value=False), \
+        patch('statusline.git.Git._run_command', side_effect=CalledProcessError(128, '')):
+        actual = instance.has_vcs()
+        assert not actual
+
+
 @pytest.mark.parametrize('porcelain, expected', (
     ([0, 0], (0, 0)),
     ([5, 10], (5, 10)),
