@@ -3,6 +3,7 @@ from os import path
 from subprocess import run
 from collections import namedtuple, defaultdict
 
+from statusline import ansi_patch
 from ansi.colour import fg, bg, fx, rgb
 
 AheadBehind = namedtuple('AheadBehind', ('ahead', 'behind'), defaults=(0, 0))
@@ -103,10 +104,11 @@ class Git:
         Colour coding is done with terminal escapes.
         """
         # branch logo in git color #f14e32 (colour 202 is ideal)
-        result = ['\001', rgb.rgb256(241, 78, 50), '\002\uE0A0\001', fx.reset, '\002', self.branch]
+        # rgb.rgb256(241, 78, 50)
+        result = [ansi_patch.colour256(202), '\uE0A0', fx.reset, self.branch]
         ahead_behind = self.ahead_behind()
         if ahead_behind.ahead and ahead_behind.behind:
-            result.extend(['\001', fg.black+bg.brightred, '\002↕%d' % sum(ahead_behind), '\001', fx.reset, '\002'])
+            result.extend([fg.black+bg.brightred, '↕%d' % sum(ahead_behind), fx.reset])
         elif ahead_behind.ahead:
             result.append('↑%d' % ahead_behind.ahead)
         elif ahead_behind.behind:
@@ -115,12 +117,12 @@ class Git:
         if sum(status):
             result.append('(')
             if status.staged:
-                result.extend(['\001', fg.green, '\002', status.staged])
+                result.extend([fg.green, status.staged])
             if status.unstaged:
-                result.extend(['\001', fg.red, '\002', status.unstaged])
+                result.extend([fg.red, status.unstaged])
             if status.untracked:
-                result.extend(['\001', fg.brightblack, '\002', status.untracked])
-            result.extend(['\001', fx.reset, '\002)'])
+                result.extend([fg.brightblack, status.untracked])
+            result.extend([fx.reset, ')'])
         stashes = self.stashes()
         if stashes:
             result.append('{%d}' % stashes)
