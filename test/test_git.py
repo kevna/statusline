@@ -127,32 +127,30 @@ def test_stashes(mock, instance):
 
 
 @pytest.mark.parametrize('branch, ab, status, stashes, expected', (
-    ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, '\uE0A0\033[0mmaster'),
+    ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master'),
     (
         'master',
         AheadBehind(1, 0),
         Status(3, 2, 0),
         0,
-        '\uE0A0\033[0mmaster↑1(\033[32m3\033[31m2\033[0m)',
+        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
     ),
     (
         'master',
         AheadBehind(0, 1),
         Status(0, 0, 5),
         0,
-        '\uE0A0\033[0mmaster↓1(\033[90m5\033[0m)',
+        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↓1(\001\033[90m\0025\001\033[0m\002)',
     ),
     (
         'master',
         AheadBehind(3, 2),
         Status(0, 0, 0),
         1,
-        '\uE0A0\033[0mmaster\033[30;101m↕5\033[0m{1}',
+        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master\001\033[30;101m\002↕5\001\033[0m\002{1}',
     ),
 ))
-# TODO should we mock more of the ansi calls here?
-@patch('statusline.git.rgb.rgb256', return_value='')
-def test_short_stats(mock, branch, ab, status, stashes, expected, instance):
+def test_short_stats(branch, ab, status, stashes, expected, instance):
     with patch(
         'statusline.git.Git.branch', new_callable=PropertyMock, return_value=branch
     ), patch(

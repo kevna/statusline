@@ -17,7 +17,7 @@ class DirectoryMinify:
         return name
 
     def hi(self, text):
-        return fg.brightblue(text)
+        return '\001%s\002' % fg.brightblue(text)
 
     def minify_path(self, path: str, home=os.path.expanduser('~'), keep = 1):
         """Minify a path string.

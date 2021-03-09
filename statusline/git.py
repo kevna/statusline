@@ -3,6 +3,7 @@ from os import path
 from subprocess import run, CalledProcessError
 from collections import namedtuple, defaultdict
 
+from statusline import ansi_patch
 from ansi.colour import fg, bg, fx, rgb
 
 AheadBehind = namedtuple('AheadBehind', ('ahead', 'behind'), defaults=(0, 0))
@@ -110,7 +111,8 @@ class Git:
         Colour coding is done with terminal escapes.
         """
         # branch logo in git color #f14e32 (colour 202 is ideal)
-        result = [rgb.rgb256(241, 78, 50), '\uE0A0', fx.reset, self.branch]
+        # rgb.rgb256(241, 78, 50)
+        result = [ansi_patch.colour256(202), '\uE0A0', fx.reset, self.branch]
         ahead_behind = self.ahead_behind()
         if ahead_behind.ahead and ahead_behind.behind:
             result.extend([fg.black+bg.brightred, '↕%d' % sum(ahead_behind), fx.reset])
