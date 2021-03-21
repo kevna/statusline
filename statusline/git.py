@@ -64,6 +64,17 @@ class Git:
     def __init__(self):
         self._root = None
 
+    def __bool__(self):
+        """Simple check for being in a git repo.
+        Testing for .git is faster but only works in project root
+        alernatively we'll use the git tool.
+        """
+        try:
+            return path.exists('.git') \
+                    or bool(self.root_dir)
+        except CalledProcessError:
+            return False
+
     def _run_command(self, command: list) -> str:
         """Run command and handle failures quietly."""
         return run(
@@ -111,17 +122,6 @@ class Git:
         """
         return int(path.getmtime(path.join(self.root_dir, '.git/FETCH_HEAD')))
 
-    def has_vcs(self) -> bool:
-        """Simple check for being in a git repo.
-        Testing for .git is faster but only works in project root
-        alernatively we'll use the git tool.
-        """
-        try:
-            return path.exists('.git') \
-                    or bool(self.root_dir)
-        except CalledProcessError:
-            return False
-
     def ahead_behind(self) -> AheadBehind:
         """Count unsynched commits between current branch and it's remote."""
         try:
@@ -156,16 +156,13 @@ class Git:
         Colour coding is done with terminal escapes.
         """
         result = [self.ICON, self.branch, self.ahead_behind()]
-        status = self.status()
-        if status:
-            result.extend(['(', status, ')'])
-        stashes = self.stashes()
-        if stashes:
+        if status := self.status():
+            result += ['(', status, ')']
+        if stashes := self.stashes():
             result.append(f'{{{stashes}}}')
         return ''.join(map(str, result))
 
 
 if __name__ == '__main__':
-    git = Git()
-    if git.has_vcs():
+    if git := Git():
         print(git.short_stats())

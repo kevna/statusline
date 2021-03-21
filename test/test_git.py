@@ -12,30 +12,6 @@ def git():
     return Git()
 
 
-#@pytest.mark.parametrize('branch, ab, status, stashes, expected', (
-#    ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master'),
-#    (
-#        'master',
-#        AheadBehind(1, 0),
-#        Status(3, 2, 0),
-#        0,
-#        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
-#    ),
-#    (
-#        'master',
-#        AheadBehind(0, 1),
-#        Status(0, 0, 5),
-#        0,
-#        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↓1(\001\033[90m\0025\001\033[0m\002)',
-#    ),
-#    (
-#        'master',
-#        AheadBehind(3, 2),
-#        Status(0, 0, 0),
-#        1,
-#        '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master\001\033[30;101m\002↕5\001\033[0m\002{1}',
-#    ),
-#))
 class Test_AheadBehind:
     @pytest.mark.parametrize('args, expected', (
         ((), ''),
@@ -123,23 +99,17 @@ class Test_Git:
         assert mock.call_args == call('root/.git/FETCH_HEAD')
 
     @pytest.mark.parametrize('exists, root, expected', (
-        (True, None, True),
-        (False, 'root', True),
-        (False, '', False),
-        (False, None, False),
+        (True, [None], True),
+        (False, ['root'], True),
+        (False, [''], False),
+        (False, [None], False),
+        (False, [CalledProcessError(128, '')], False),
     ))
-    def test_has_vcs(self, exists, root, expected, git):
+    def test_bool(self, exists, root, expected, git):
         with patch('statusline.git.path.exists', return_value=exists) as mock_exists, \
-            patch('statusline.git.Git.root_dir', new_callable=PropertyMock, return_value=root):
-            actual = git.has_vcs()
-            assert actual == expected
+            patch('statusline.git.Git.root_dir', new_callable=PropertyMock, side_effect=root):
+            assert bool(git) == expected
             mock_exists.called_once_with('.git')
-
-    def test_has_vcs_error(self, git):
-        with patch('statusline.git.path.exists', return_value=False), \
-            patch('statusline.git.Git._run_command', side_effect=CalledProcessError(128, '')):
-            actual = git.has_vcs()
-            assert not actual
 
     @pytest.mark.parametrize('porcelain, expected', (
         ([0, 0], AheadBehind()),
