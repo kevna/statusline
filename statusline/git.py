@@ -57,6 +57,10 @@ class Status:
 class Git:
     """Get information about the status of the current git repository."""
 
+    # branch logo in git color #f14e32 (colour 202 is ideal)
+    # rgb.rgb256(241, 78, 50)
+    ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
+
     def __init__(self):
         self._root = None
 
@@ -151,9 +155,7 @@ class Git:
         """Generate a short text summary of the repository status.
         Colour coding is done with terminal escapes.
         """
-        # branch logo in git color #f14e32 (colour 202 is ideal)
-        # rgb.rgb256(241, 78, 50)
-        result = [ansi_patch.colour256(202), '\uE0A0', fx.reset, self.branch, self.ahead_behind()]
+        result = [self.ICON, self.branch, self.ahead_behind()]
         status = self.status()
         if status:
             result.extend(['(', status, ')'])
