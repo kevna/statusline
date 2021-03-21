@@ -2,22 +2,22 @@
 import os
 import re
 
-from ansi.colour import fg
+from ansi.colour import fg, fx
 
 from statusline.git import Git
+
 
 class DirectoryMinify:
     VCS = Git()
 
     def _minify_dir(self, name: str, regex=re.compile(r'^(\W*\w)')):
         """Shorten a string to the first group that matches regex."""
-        match = regex.match(name)
-        if match:
+        if match := regex.match(name):
             return match.group(0)
         return name
 
     def hi(self, text):
-        return '\001%s\002' % fg.brightblue(text)
+        return f'{fg.brightblue}{text}{fx.reset}'
 
     def minify_path(self, path: str, home=os.path.expanduser('~'), keep = 1):
         """Minify a path string.
@@ -38,7 +38,7 @@ class DirectoryMinify:
     def get_statusline(self):
         """Minified working dir with VCS status if available."""
         path = os.getcwd()
-        if self.VCS.has_vcs():
+        if self.VCS:
             return self._apply_vcs(path)
         return self.minify_path(path)
 
