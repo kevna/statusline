@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, MagicMock, call
 
 import pytest
 
@@ -9,7 +9,7 @@ from statusline.git import Git
 @pytest.fixture()
 def instance():
     result = DirectoryMinify()
-    result.VCS = Mock(spec=Git)
+    result.VCS = MagicMock(spec=Git)
     return result
 
 
@@ -60,18 +60,18 @@ def test__apply_vcs(mock_minify, instance):
 @patch('statusline.status.os.getcwd', return_value='/home/kevna/.local/share/chezmoi')
 @patch('statusline.status.DirectoryMinify._apply_vcs', return_value='~/.l/s/chezmoi')
 def test_get_statusline_git(mock_minify, mock_cwd, instance):
-    instance.VCS.has_vcs.return_value = True
+    instance.VCS.__bool__.return_value = True
     actual = instance.get_statusline()
     assert actual == mock_minify.return_value
-    assert instance.VCS.has_vcs.called
+    assert instance.VCS.__bool__.called
     mock_minify.assert_called_once_with(mock_cwd.return_value)
 
 
 @patch('statusline.status.os.getcwd', return_value='/home/kevna/.local/share/chezmoi')
 @patch('statusline.status.DirectoryMinify.minify_path', return_value='~/.l/s/chezmoi')
 def test_get_statusline_nogit(mock_minify, mock_cwd, instance):
-    instance.VCS.has_vcs.return_value = False
+    instance.VCS.__bool__.return_value = False
     actual = instance.get_statusline()
     assert actual == mock_minify.return_value
-    assert instance.VCS.has_vcs.called
+    assert instance.VCS.__bool__.called
     mock_minify.assert_called_once_with(mock_cwd.return_value)

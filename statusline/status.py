@@ -12,8 +12,7 @@ class DirectoryMinify:
 
     def _minify_dir(self, name: str, regex=re.compile(r'^(\W*\w)')):
         """Shorten a string to the first group that matches regex."""
-        match = regex.match(name)
-        if match:
+        if match := regex.match(name):
             return match.group(0)
         return name
 
@@ -39,7 +38,7 @@ class DirectoryMinify:
     def get_statusline(self):
         """Minified working dir with VCS status if available."""
         path = os.getcwd()
-        if self.VCS.has_vcs():
+        if self.VCS:
             return self._apply_vcs(path)
         return self.minify_path(path)
 
