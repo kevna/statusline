@@ -16,15 +16,18 @@ Status = namedtuple(
 class Git:
     """Get information about the status of the current git repository."""
 
-    def __init__(self):
+    def __init__(self, path=''):
+        self.path = path
         self._root = None
 
     def _run_command(self, command: list) -> str:
         """Run command and handle failures quietly."""
+        if self.path:
+            command = ['-C', self._root or self.path] + command
         return run(
                 ['git'] + command,
                 check=True,
-                capture_output=True
+                capture_output=True,
                 ).stdout.decode('utf-8')
 
     def _count(self, command: list) -> int:
@@ -72,7 +75,7 @@ class Git:
         alernatively we'll use the git tool.
         """
         try:
-            return path.exists('.git') \
+            return path.exists(path.join(self.path, '.git')) \
                     or bool(self.root_dir)
         except CalledProcessError:
             return False
