@@ -1,20 +1,65 @@
 #!/usr/bin/python3
 from os import path
 from subprocess import run, CalledProcessError
-from collections import namedtuple, defaultdict
+from dataclasses import dataclass
+from collections import defaultdict
 
 from statusline import ansi_patch
 from ansi.colour import fg, bg, fx, rgb
 
-AheadBehind = namedtuple('AheadBehind', ('ahead', 'behind'), defaults=(0, 0))
-Status = namedtuple(
-        'Status',
-        ('staged', 'unstaged', 'untracked'),
-        defaults=(0, 0, 0)
-        )
+
+@dataclass
+class AheadBehind:
+    """Model for the distance ahead/behind the remote."""
+
+    ahead: int = 0
+    behind: int = 0
+
+    def __str__(self):
+        if self.ahead and self.behind:
+            return ''.join([
+                str(fg.black+bg.brightred),
+                f'↕{self.ahead+self.behind}',
+                str(fx.reset),
+            ])
+        if self.ahead:
+            return f'↑{self.ahead}'
+        if self.behind:
+            return f'↓{self.behind}'
+        return ''
+
+
+@dataclass
+class Status:
+    """Model for the current working status of the repository."""
+
+    staged: int = 0
+    unstaged: int = 0
+    untracked: int = 0
+
+    def __bool__(self):
+        # Tested in order of likelyhood for performance
+        return bool(self.unstaged or self.untracked or self.staged)
+
+    def __str__(self):
+        result = []
+        if self.staged:
+            result.extend([fg.green, self.staged])
+        if self.unstaged:
+            result.extend([fg.red, self.unstaged])
+        if self.untracked:
+            result.extend([fg.brightblack, self.untracked])
+        if result:
+            result.append(fx.reset)
+        return ''.join(map(str, result))
+
 
 class Git:
     """Get information about the status of the current git repository."""
+
+    # branch logo in git color #f14e32 (colour 202 is ideal)
+    # rgb.rgb256(241, 78, 50)
+    ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
     def __init__(self):
         self._root = None
@@ -82,10 +127,10 @@ class Git:
         try:
             ahead = self._count(['rev-list', '@{u}..HEAD'])
             behind = self._count(['rev-list', 'HEAD..@{u}'])
+            return AheadBehind(ahead, behind)
         except CalledProcessError:
             # This occurs if there's no upstream repo to compare.
             return AheadBehind()
-        return AheadBehind(ahead, behind)
 
     def status(self) -> Status:
         """Count the number of changes files in the various statuses git tracks."""
@@ -110,29 +155,13 @@ class Git:
         """Generate a short text summary of the repository status.
         Colour coding is done with terminal escapes.
         """
-        # branch logo in git color #f14e32 (colour 202 is ideal)
-        # rgb.rgb256(241, 78, 50)
-        result = [ansi_patch.colour256(202), '\uE0A0', fx.reset, self.branch]
-        ahead_behind = self.ahead_behind()
-        if ahead_behind.ahead and ahead_behind.behind:
-            result.extend([fg.black+bg.brightred, '↕%d' % sum(ahead_behind), fx.reset])
-        elif ahead_behind.ahead:
-            result.append('↑%d' % ahead_behind.ahead)
-        elif ahead_behind.behind:
-            result.append('↓%d' % ahead_behind.behind)
+        result = [self.ICON, self.branch, self.ahead_behind()]
         status = self.status()
-        if sum(status):
-            result.append('(')
-            if status.staged:
-                result.extend([fg.green, status.staged])
-            if status.unstaged:
-                result.extend([fg.red, status.unstaged])
-            if status.untracked:
-                result.extend([fg.brightblack, status.untracked])
-            result.extend([fx.reset, ')'])
+        if status:
+            result.extend(['(', status, ')'])
         stashes = self.stashes()
         if stashes:
-            result.append('{%d}' % stashes)
+            result.append(f'{{{stashes}}}')
         return ''.join(map(str, result))
 
 
