@@ -2,9 +2,10 @@
 import os
 import re
 
-from ansi.colour import fg
+from ansi.colour import fg, fx
 
 from statusline.git import Git
+
 
 class DirectoryMinify:
     VCS = Git()
@@ -17,7 +18,7 @@ class DirectoryMinify:
         return name
 
     def hi(self, text):
-        return '\001%s\002' % fg.brightblue(text)
+        return '%s%s%s' % (fg.brightblue, text, fx.reset)
 
     def minify_path(self, path: str, home=os.path.expanduser('~'), keep = 1):
         """Minify a path string.
