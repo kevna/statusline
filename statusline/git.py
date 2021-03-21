@@ -115,11 +115,11 @@ class Git:
         result = [ansi_patch.colour256(202), '\uE0A0', fx.reset, self.branch]
         ahead_behind = self.ahead_behind()
         if ahead_behind.ahead and ahead_behind.behind:
-            result.extend([fg.black+bg.brightred, '↕%d' % sum(ahead_behind), fx.reset])
+            result.extend([fg.black+bg.brightred, f'↕{sum(ahead_behind)}', fx.reset])
         elif ahead_behind.ahead:
-            result.append('↑%d' % ahead_behind.ahead)
+            result.append(f'↑{ahead_behind.ahead}')
         elif ahead_behind.behind:
-            result.append('↓%d' % ahead_behind.behind)
+            result.append(f'↓{ahead_behind.behind}')
         status = self.status()
         if sum(status):
             result.append('(')
@@ -132,7 +132,7 @@ class Git:
             result.extend([fx.reset, ')'])
         stashes = self.stashes()
         if stashes:
-            result.append('{%d}' % stashes)
+            result.append(f'{{{stashes}}}')
         return ''.join(map(str, result))
 
 
