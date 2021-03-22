@@ -8,7 +8,7 @@ from statusline.git import Git
 
 
 class DirectoryMinify:
-    VCS = Git()
+    VCS = Git
 
     def _minify_dir(self, name: str, regex=re.compile(r'^(\W*\w)')):
         """Shorten a string to the first group that matches regex."""
@@ -28,18 +28,18 @@ class DirectoryMinify:
             pathlist = list(map(self._minify_dir, pathlist[:-keep])) + pathlist[-keep:]
         return self.hi(os.sep.join(pathlist))
 
-    def _apply_vcs(self, path: str):
+    def _apply_vcs(self, path: str, vcs: Git):
         """Add VCS status information at the repository root in the path."""
-        common = os.path.commonpath([path, self.VCS.root_dir])
+        common = os.path.commonpath([path, vcs.root_dir])
         return self.minify_path(common) \
-                + self.VCS.short_stats() \
+                + vcs.short_stats() \
                 + self.minify_path(path[len(common):])
 
-    def get_statusline(self):
+    def get_statusline(self, path = os.getcwd()):
         """Minified working dir with VCS status if available."""
-        path = os.getcwd()
-        if self.VCS:
-            return self._apply_vcs(path)
+        path = os.path.abspath(path)
+        if vcs := self.VCS(path=path):
+            return self._apply_vcs(path, vcs)
         return self.minify_path(path)
 
 
