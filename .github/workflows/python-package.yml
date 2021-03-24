@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Python Poetry Action
+      # https://github.com/marketplace/actions/python-poetry-action
+      uses: abatilo/actions-poetry@v2.1.0
+    - name: Lint with pylint and mypy
+      run: |
+        poetry run pylint statusline
+        PYLINTRC=test/pylintrc poetry run pylint test
+        poetry run mypy statusline test
+    - name: Test with pytest
+      run: |
+        poetry run pytest
