@@ -1,5 +1,5 @@
-from ansi.colour.base import Graphic
-from ansi.sequence import sequence
+from ansi.colour.base import Graphic # type: ignore
+from ansi.sequence import sequence # type: ignore
 
 
 def patch(self):
