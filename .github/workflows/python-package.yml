@@ -20,6 +20,8 @@ jobs:
     - name: Python Poetry Action
       # https://github.com/marketplace/actions/python-poetry-action
       uses: abatilo/actions-poetry@v2.1.0
+    - name: Install dependencies
+      run: poetry install
     - name: Lint with pylint and mypy
       run: |
         poetry run pylint statusline
