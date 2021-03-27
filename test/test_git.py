@@ -12,7 +12,7 @@ def git():
     return Git()
 
 
-class Test_AheadBehind:
+class TestAheadBehind:
     @pytest.mark.parametrize('args, expected', (
         ((), ''),
         ((4, 0), '↑4'),
@@ -24,7 +24,7 @@ class Test_AheadBehind:
         assert f'{ahead_behind}' == expected
 
 
-class Test_Status:
+class TestStatus:
     @pytest.mark.parametrize('args, expected', (
         ((), False),
         ((1, 0, 0), True),
@@ -49,30 +49,30 @@ class Test_Status:
 
 
 
-class Test_Git:
+class TestGit:
     @pytest.mark.parametrize('cmd, mock, expected_return, expected_call', (
         (
             ['stash', 'list', '--porcelain'],
             SimpleNamespace(stdout=b'stash@{0}\nstash@{1}\n'),
             'stash@{0}\nstash@{1}\n',
-            call(['git', 'stash', 'list', '--porcelain'], check=True, capture_output=True)
+            call(['git', 'stash', 'list', '--porcelain'], check=True, capture_output=True),
         ),
     ))
     def test__run_command(self, cmd, mock, expected_return, expected_call, git):
-        with patch('statusline.git.run', return_value=mock) as mock:
+        with patch('statusline.git.run', return_value=mock) as mock_run:
             actual = git._run_command(cmd)
             assert actual == expected_return
-            assert mock.call_args == expected_call
+            assert mock_run.call_args == expected_call
 
     @pytest.mark.parametrize('cmd, mock, expected', (
         (['stash', 'list'], '', 0),
         (['stash', 'list'], 'stash@{0}\nstash@{1}\n', 2),
     ))
     def test__count(self, cmd, mock, expected, git):
-        with patch('statusline.git.Git._run_command', return_value=mock) as mock:
+        with patch('statusline.git.Git._run_command', return_value=mock) as mock_run:
             actual = git._count(cmd)
             assert actual == expected
-            assert mock.call_args == call(cmd)
+            assert mock_run.call_args == call(cmd)
 
     @patch('statusline.git.Git._run_command', return_value='~/.local/chezmoi\n')
     def test_root_dir_cached(self, mock, git):
@@ -146,35 +146,35 @@ class Test_Git:
         assert actual == 1
         assert mock.call_args == call(['stash', 'list'])
 
-    @pytest.mark.parametrize('branch, ab, status, stashes, expected', (
-        ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master'),
+    @pytest.mark.parametrize('branch, aheadbehind, status, stashes, expected', (
+        ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}master'),
         (
             'master',
             AheadBehind(1, 0),
             Status(3, 2, 0),
             0,
-            '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
+            f'{Git.ICON}master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
         ),
         (
             'master',
             AheadBehind(0, 1),
             Status(0, 0, 5),
             0,
-            '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master↓1(\001\033[90m\0025\001\033[0m\002)',
+            f'{Git.ICON}master↓1(\001\033[90m\0025\001\033[0m\002)',
         ),
         (
             'master',
             AheadBehind(3, 2),
             Status(0, 0, 0),
             1,
-            '\001\033[38;5;202m\002\uE0A0\001\033[0m\002master\001\033[30;101m\002↕5\001\033[0m\002{1}',
+            f'{Git.ICON}master\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
         ),
     ))
-    def test_short_stats(self, branch, ab, status, stashes, expected, git):
+    def test_short_stats(self, branch, aheadbehind, status, stashes, expected, git):
         with patch(
             'statusline.git.Git.branch', new_callable=PropertyMock, return_value=branch
         ), patch(
-            'statusline.git.Git.ahead_behind', return_value=ab
+            'statusline.git.Git.ahead_behind', return_value=aheadbehind
         ), patch(
             'statusline.git.Git.status', return_value=status
         ), patch(

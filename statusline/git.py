@@ -3,9 +3,11 @@ from os import path
 from subprocess import run, CalledProcessError
 from dataclasses import dataclass
 from collections import defaultdict
+from typing import Optional
+
+from ansi.colour import fg, bg, fx # type: ignore
 
 from statusline import ansi_patch
-from ansi.colour import fg, bg, fx, rgb
 
 
 @dataclass
@@ -62,7 +64,7 @@ class Git:
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
     def __init__(self):
-        self._root = None
+        self._root: Optional[str] = None
 
     def __bool__(self):
         """Simple check for being in a git repo.
@@ -75,7 +77,8 @@ class Git:
         except CalledProcessError:
             return False
 
-    def _run_command(self, command: list) -> str:
+    @staticmethod
+    def _run_command(command: list) -> str:
         """Run command and handle failures quietly."""
         return run(
                 ['git'] + command,
