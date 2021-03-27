@@ -23,10 +23,6 @@ jobs:
     - name: Install dependencies
       run: poetry install
     - name: Lint with pylint and mypy
-      run: |
-        poetry run pylint statusline
-        PYLINTRC=test/pylintrc poetry run pylint test
-        poetry run mypy statusline test
+      run: make lint
     - name: Test with pytest
-      run: |
-        poetry run pytest
+      run: make test
