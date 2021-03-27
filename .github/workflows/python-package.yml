@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Python Poetry Action
+      # https://github.com/marketplace/actions/python-poetry-action
+      uses: abatilo/actions-poetry@v2.1.0
+    - name: Install dependencies
+      run: poetry install
+    - name: Lint with pylint and mypy
+      run: make lint
+    - name: Test with pytest
+      run: make test

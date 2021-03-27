@@ -3,9 +3,11 @@ from os import path
 from subprocess import run, CalledProcessError
 from dataclasses import dataclass
 from collections import defaultdict
+from typing import Optional
+
+from ansi.colour import fg, bg, fx # type: ignore
 
 from statusline import ansi_patch
-from ansi.colour import fg, bg, fx, rgb
 
 
 @dataclass
@@ -61,9 +63,9 @@ class Git:
     # rgb.rgb256(241, 78, 50)
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
-    def __init__(self, path=''):
+    def __init__(self, path=''):  # pylint: disable=redefined-outer-name
         self.path = path
-        self._root = None
+        self._root: Optional[str] = None
 
     def __bool__(self):
         """Simple check for being in a git repo.

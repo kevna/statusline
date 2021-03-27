@@ -31,7 +31,7 @@ def test__minify_dir(name, expected, instance):
     ('/etc/X11/xorg.conf.d', '/e/X/xorg.conf.d'),
     ('~/.local/share/chezmoi/private_dot_config/i3', '~/.l/s/c/p/i3'),
 ))
-@patch('statusline.status.DirectoryMinify.hi', side_effect=lambda x: x)
+@patch('statusline.status._hilight', side_effect=lambda x: x)
 def test_minify_path(mock, path, expected, instance):
     actual = instance.minify_path(path)
     assert actual == expected
@@ -41,7 +41,7 @@ def test_minify_path(mock, path, expected, instance):
     ('/home/kevna', '~'),
     ('/home/kevna/.config', '~/.config'),
 ))
-@patch('statusline.status.DirectoryMinify.hi', side_effect=lambda x: x)
+@patch('statusline.status._hilight', side_effect=lambda x: x)
 def test_minify_path_home(mock, path, expected, instance):
     actual = instance.minify_path(path, home='/home/kevna')
     assert actual == expected

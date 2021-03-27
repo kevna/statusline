@@ -2,22 +2,24 @@
 import os
 import re
 
-from ansi.colour import fg, fx
+from ansi.colour import fg, fx # type: ignore
 
 from statusline.git import Git
 
 
+def _hilight(text):
+    return f'{fg.brightblue}{text}{fx.reset}'
+
 class DirectoryMinify:
+    """Handle directory shortening and applying VCS."""
     VCS = Git
 
-    def _minify_dir(self, name: str, regex=re.compile(r'^(\W*\w)')):
+    @staticmethod
+    def _minify_dir(name: str, regex=re.compile(r'^(\W*\w)')):
         """Shorten a string to the first group that matches regex."""
         if match := regex.match(name):
             return match.group(0)
         return name
-
-    def hi(self, text):
-        return f'{fg.brightblue}{text}{fx.reset}'
 
     def minify_path(self, path: str, home=os.path.expanduser('~'), keep = 1):
         """Minify a path string.
@@ -26,7 +28,7 @@ class DirectoryMinify:
         pathlist = path.replace(home, '~', 1).split(os.sep)
         if len(pathlist) > keep:
             pathlist = list(map(self._minify_dir, pathlist[:-keep])) + pathlist[-keep:]
-        return self.hi(os.sep.join(pathlist))
+        return _hilight(os.sep.join(pathlist))
 
     def _apply_vcs(self, path: str, vcs: Git):
         """Add VCS status information at the repository root in the path."""
