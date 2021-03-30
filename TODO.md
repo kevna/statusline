@@ -12,7 +12,7 @@ Features for the future
   - [X] ideally a linting tool
   - [X] turn off requiring code reviews? (currently used to block trunk commits)
   - [ ] potential to build wheel on master?
-- [ ] indicator for not having an upstream branch set?
+- [X] indicator for not having an upstream branch set?
 - [ ] minify git branch group-name?
   - eg. feature/branch -> f/branch
   - [ ] would need to refactor out the minify to avoid a circular dependacy
