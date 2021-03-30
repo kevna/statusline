@@ -125,7 +125,7 @@ class Git:
         """
         return int(path.getmtime(path.join(self.root_dir, '.git/FETCH_HEAD')))
 
-    def ahead_behind(self) -> AheadBehind:
+    def ahead_behind(self) -> Optional[AheadBehind]:
         """Count unsynched commits between current branch and it's remote."""
         try:
             ahead = self._count(['rev-list', '@{u}..HEAD'])
@@ -133,7 +133,7 @@ class Git:
             return AheadBehind(ahead, behind)
         except CalledProcessError:
             # This occurs if there's no upstream repo to compare.
-            return AheadBehind()
+            return None
 
     def status(self) -> Status:
         """Count the number of changes files in the various statuses git tracks."""
@@ -158,12 +158,16 @@ class Git:
         """Generate a short text summary of the repository status.
         Colour coding is done with terminal escapes.
         """
-        result = [self.ICON, self.branch, self.ahead_behind()]
+        result = [self.ICON, self.branch]
+        if ahead_behind := self.ahead_behind():
+            result.append(str(ahead_behind))
+        else:
+            result.append(f'{fg.brightred}↯{fx.reset}')
         if status := self.status():
-            result += ['(', status, ')']
+            result.append(f'({status})')
         if stashes := self.stashes():
             result.append(f'{{{stashes}}}')
-        return ''.join(map(str, result))
+        return ''.join(result)
 
 
 if __name__ == '__main__':

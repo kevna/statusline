@@ -127,7 +127,7 @@ class TestGit:
     def test_ahead_behind_noupstream(self, git):
         with patch('statusline.git.Git._count', side_effect=CalledProcessError(128, '')) as mock:
             actual = git.ahead_behind()
-            assert actual == AheadBehind()
+            assert actual is None
             assert mock.call_args == call(['rev-list', '@{u}..HEAD'])
 
     @pytest.mark.parametrize('porcelain, expected', (
@@ -148,6 +148,7 @@ class TestGit:
 
     @pytest.mark.parametrize('branch, aheadbehind, status, stashes, expected', (
         ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}master'),
+        ('master', None, Status(0, 0, 0), 0, f'{Git.ICON}master\001\033[91m\002↯\001\033[0m\002'),
         (
             'master',
             AheadBehind(1, 0),
