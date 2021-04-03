@@ -18,6 +18,7 @@ class AheadBehind:
     behind: int = 0
 
     def __str__(self):
+        """Generate a short text summary of how far ahead/behind the remote."""
         if self.ahead and self.behind:
             return ''.join([
                 str(fg.black+bg.brightred),
@@ -40,10 +41,12 @@ class Status:
     untracked: int = 0
 
     def __bool__(self):
+        """Test if there is status information in this object to display."""
         # Tested in order of likelyhood for performance
         return bool(self.unstaged or self.untracked or self.staged)
 
     def __str__(self):
+        """Generate a short text summary of changes in working copy."""
         result = []
         if self.staged:
             result.extend([fg.green, self.staged])
@@ -79,7 +82,10 @@ class Git:
 
     @staticmethod
     def _run_command(command: list) -> str:
-        """Run command and handle failures quietly."""
+        """Run command and handle failures quietly.
+        :param command: subcommand and options used to call git
+        :return: the stdout resulting from the git command
+        """
         return run(
                 ['git'] + command,
                 check=True,
@@ -87,7 +93,10 @@ class Git:
                 ).stdout.decode('utf-8')
 
     def _count(self, command: list) -> int:
-        """Helper to count the number of records returned from _run_command."""
+        """Helper to count the number of records resulted from running a command.
+        :param command: the command that will be passed down to _run_command
+        :return: the count of lines returned from running the given command
+        """
         rows = self._run_command(command).split('\n')
         rows.remove('')
         return len(rows)
@@ -98,6 +107,7 @@ class Git:
 
         This is only generated once so if we
         change repo with this instance it would be wrong.
+        :return: the absolute path to the repository root
         """
         if not self._root:
             self._root = self._run_command(
@@ -107,7 +117,9 @@ class Git:
 
     @property
     def branch(self) -> str:
-        """Property for the current branch name."""
+        """Property for the current branch name.
+        :return: the current local branch name
+        """
         return self._run_command(
                 ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
                 ).strip()
@@ -122,11 +134,14 @@ class Git:
             † regular fetches may be problematic for --force-with-lease
             see stackoverflow for details
             https://stackoverflow.com/questions/30542491/push-force-with-lease-by-default/43726130#43726130
+        :return: the unix timestamp that the last fetch occurred
         """
         return int(path.getmtime(path.join(self.root_dir, '.git/FETCH_HEAD')))
 
     def ahead_behind(self) -> Optional[AheadBehind]:
-        """Count unsynched commits between current branch and it's remote."""
+        """Count unsynched commits between current branch and it's remote.
+        :return: AheadBehind comparing local and remote if remote branch exists
+        """
         try:
             ahead = self._count(['rev-list', '@{u}..HEAD'])
             behind = self._count(['rev-list', 'HEAD..@{u}'])
@@ -136,7 +151,9 @@ class Git:
             return None
 
     def status(self) -> Status:
-        """Count the number of changes files in the various statuses git tracks."""
+        """Count the number of changes files in the various statuses git tracks.
+        :return: A Status which describes the current state of working copy
+        """
         output = self._run_command(['status', '--porcelain'])
         result: dict = defaultdict(int)
         for line in output.split('\n'):
@@ -151,12 +168,15 @@ class Git:
         return Status(**result)
 
     def stashes(self) -> int:
-        """Count the number of records in the git stash."""
+        """Count the number of records in the git stash.
+        :return: current count of stash records
+        """
         return self._count(['stash', 'list'])
 
     def short_stats(self) -> str:
         """Generate a short text summary of the repository status.
         Colour coding is done with terminal escapes.
+        :return: a short string which summarises repository status
         """
         result = [self.ICON, self.branch]
         if ahead_behind := self.ahead_behind():
