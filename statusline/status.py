@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import re
+from typing import cast
 
 from ansi.colour import fg, fx # type: ignore
 
@@ -27,7 +28,7 @@ class DirectoryMinify:
         :return: the minified name if possible, else the whole name
         """
         if match := regex.match(name):
-            return match.group(0)
+            return cast(str, match[0])
         return name
 
     def minify_path(self, path: str, home: str = os.path.expanduser('~'), keep: int = 1) -> str:
