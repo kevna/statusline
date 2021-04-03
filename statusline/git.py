@@ -60,13 +60,15 @@ class Status:
 
 
 class Git:
-    """Get information about the status of the current git repository."""
+    """Get information about the status of the current git repository.
+    :param path: provide a path to test the git repo (default is current dir)
+    """
 
     # branch logo in git color #f14e32 (colour 202 is ideal)
     # rgb.rgb256(241, 78, 50)
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
-    def __init__(self, path=''):  # pylint: disable=redefined-outer-name
+    def __init__(self, path: str = ''):  # pylint: disable=redefined-outer-name
         self.path = path
         self._root: Optional[str] = None
 

@@ -48,6 +48,7 @@ class DirectoryMinify:
     def _apply_vcs(self, path: str, vcs: Git) -> str:
         """Add VCS status information at the repository root in the path.
         :param path: the original path to generate details from
+        :param vcs: the VCS object to apply to the path
         :return: the minified path with repository information inserted
         """
         common = os.path.commonpath([path, vcs.root_dir])
