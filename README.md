@@ -11,6 +11,15 @@ When the working directory is within a git repository the name of the repo direc
 This includes the current branch name, distance ahead/behind upstream and counts of staged, unstaged and untracked files and stash entries.
 The remaining path is also minified in the usual manner.
 
+## Code Quality
+We have a number of checks in place to ensure the quality of the codebase for this project.
+Static analysis is performed using `pylint` for linting and `mypy` for type checking.
+Unit testing is done with `pytest` with the `pytest-cov` module also evaluates the test coverage.
+
+In order to install and maintain these development dependencies we use `poetry` which manages the dependency lists and also installed versions within a virtual environment.
+This also allows us to run a github workflow to run the static analysis and testing, we require these to pass in order to permit a pull request.
+We manually self-review our code however we do not require reviews for PRs since this project is a one-man team and github doesn't allow the developer to review their own code.
+
 ## Examples
 
 The current user's home dir is shortened to ~, ordinary directory names are shortened to their first letter.
