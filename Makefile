@@ -1,11 +1,12 @@
-POETRY = poetry run
+POETRY := poetry run
 
 .PHONY: test
 
 lint:
 	$(POETRY) pylint statusline
-	#PYLINTRC=test/pylintrc $(POETRY) pylint test
+	cd test && $(POETRY) pylint test
 	$(POETRY) mypy statusline test
 
+REPORT := term-missing:skip-covered
 test:
-	$(POETRY) pytest --cov=statusline
+	$(POETRY) pytest --cov=statusline --cov-report=$(REPORT)

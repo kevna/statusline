@@ -148,7 +148,13 @@ class TestGit:
 
     @pytest.mark.parametrize('branch, aheadbehind, status, stashes, expected', (
         ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}master'),
-        ('master', None, Status(0, 0, 0), 0, f'{Git.ICON}master\001\033[91m\002↯\001\033[0m\002'),
+        (
+            'feature/vcs_path_support',
+            None,
+            Status(0, 0, 0),
+            0,
+            f'{Git.ICON}feature/vcs_path_support\001\033[91m\002↯\001\033[0m\002'
+        ),
         (
             'master',
             AheadBehind(1, 0),
@@ -164,11 +170,11 @@ class TestGit:
             f'{Git.ICON}master↓1(\001\033[90m\0025\001\033[0m\002)',
         ),
         (
-            'master',
+            'DI-121-email_validation',
             AheadBehind(3, 2),
             Status(0, 0, 0),
             1,
-            f'{Git.ICON}master\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
+            f'{Git.ICON}DI-121-email_validation\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
         ),
     ))
     def test_short_stats(self, branch, aheadbehind, status, stashes, expected, git):
