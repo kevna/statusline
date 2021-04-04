@@ -3,7 +3,7 @@ import os
 import re
 from typing import cast
 
-from ansi.colour import fg, fx # type: ignore
+from ansi.colour import fg, fx  # type: ignore
 
 from statusline.git import Git
 
@@ -52,8 +52,8 @@ class DirectoryMinify:
         """
         common = os.path.commonpath([path, self.VCS.root_dir])
         return self.minify_path(common) \
-                + self.VCS.short_stats() \
-                + self.minify_path(path[len(common):])
+            + self.VCS.short_stats() \
+            + self.minify_path(path[len(common):])
 
     def get_statusline(self) -> str:
         """Generate a string of information to be used in bash prompt.
