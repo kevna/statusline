@@ -2,7 +2,7 @@
 import os
 import re
 
-from ansi.colour import fg, fx # type: ignore
+from ansi.colour import fg, fx  # type: ignore
 
 from statusline.git import Git
 
@@ -34,8 +34,8 @@ class DirectoryMinify:
         """Add VCS status information at the repository root in the path."""
         common = os.path.commonpath([path, self.VCS.root_dir])
         return self.minify_path(common) \
-                + self.VCS.short_stats() \
-                + self.minify_path(path[len(common):])
+            + self.VCS.short_stats() \
+            + self.minify_path(path[len(common):])
 
     def get_statusline(self):
         """Minified working dir with VCS status if available."""

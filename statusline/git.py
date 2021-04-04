@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 from typing import Optional
 
-from ansi.colour import fg, bg, fx # type: ignore
+from ansi.colour import fg, bg, fx  # type: ignore
 
 from statusline import ansi_patch
 
@@ -19,11 +19,7 @@ class AheadBehind:
 
     def __str__(self):
         if self.ahead and self.behind:
-            return ''.join([
-                str(fg.black+bg.brightred),
-                f'↕{self.ahead+self.behind}',
-                str(fx.reset),
-            ])
+            return f'{fg.black+bg.brightred}↕{self.ahead+self.behind}{fx.reset}'
         if self.ahead:
             return f'↑{self.ahead}'
         if self.behind:
@@ -73,7 +69,7 @@ class Git:
         """
         try:
             return path.exists('.git') \
-                    or bool(self.root_dir)
+                or bool(self.root_dir)
         except CalledProcessError:
             return False
 
@@ -81,10 +77,10 @@ class Git:
     def _run_command(command: list) -> str:
         """Run command and handle failures quietly."""
         return run(
-                ['git'] + command,
-                check=True,
-                capture_output=True
-                ).stdout.decode('utf-8')
+            ['git'] + command,
+            check=True,
+            capture_output=True
+        ).stdout.decode('utf-8')
 
     def _count(self, command: list) -> int:
         """Helper to count the number of records returned from _run_command."""
@@ -101,16 +97,16 @@ class Git:
         """
         if not self._root:
             self._root = self._run_command(
-                    ['rev-parse', '--show-toplevel']
-                    ).strip()
+                ['rev-parse', '--show-toplevel']
+            ).strip()
         return self._root
 
     @property
     def branch(self) -> str:
         """Property for the current branch name."""
         return self._run_command(
-                ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
-                ).strip()
+            ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
+        ).strip()
 
     @property
     def last_fetch(self) -> int:
