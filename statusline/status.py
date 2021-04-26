@@ -18,7 +18,7 @@ def _hilight(text: str) -> str:
 
 class DirectoryMinify:
     """Handle directory shortening and applying VCS."""
-    VCS = Git()
+    VCS = Git
 
     @staticmethod
     def _minify_dir(name: str, regex: re.Pattern = re.compile(r'^(\W*\w)')) -> str:
@@ -45,24 +45,25 @@ class DirectoryMinify:
             pathlist = list(map(self._minify_dir, pathlist[:-keep])) + pathlist[-keep:]
         return _hilight(os.sep.join(pathlist))
 
-    def _apply_vcs(self, path: str) -> str:
+    def _apply_vcs(self, path: str, vcs: Git) -> str:
         """Add VCS status information at the repository root in the path.
         :param path: the original path to generate details from
+        :param vcs: the VCS object to apply to the path
         :return: the minified path with repository information inserted
         """
-        common = os.path.commonpath([path, self.VCS.root_dir])
+        common = os.path.commonpath([path, vcs.root_dir])
         return self.minify_path(common) \
-            + self.VCS.short_stats() \
+            + vcs.short_stats() \
             + self.minify_path(path[len(common):])
 
-    def get_statusline(self) -> str:
+    def get_statusline(self, path = os.getcwd()) -> str:
         """Generate a string of information to be used in bash prompt.
         This will include the working dir and the short summary from VCS.
         :return: minified working dir with VCS status if available
         """
-        path = os.getcwd()
-        if self.VCS:
-            return self._apply_vcs(path)
+        path = os.path.abspath(path)
+        if vcs := self.VCS(path=path):
+            return self._apply_vcs(path, vcs)
         return self.minify_path(path)
 
 

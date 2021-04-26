@@ -56,13 +56,16 @@ class Status:
 
 
 class Git:
-    """Get information about the status of the current git repository."""
+    """Get information about the status of the current git repository.
+    :param path: provide a path to test the git repo (default is current dir)
+    """
 
     # branch logo in git color #f14e32 (colour 202 is ideal)
     # rgb.rgb256(241, 78, 50)
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
-    def __init__(self):
+    def __init__(self, path: str = ''):  # pylint: disable=redefined-outer-name
+        self.path = path
         self._root: Optional[str] = None
 
     def __bool__(self):
@@ -71,17 +74,18 @@ class Git:
         alernatively we'll use the git tool.
         """
         try:
-            return path.exists('.git') \
+            return path.exists(path.join(self.path, '.git')) \
                 or bool(self.root_dir)
         except CalledProcessError:
             return False
 
-    @staticmethod
-    def _run_command(command: list) -> str:
+    def _run_command(self, command: list) -> str:
         """Run command and handle failures quietly.
         :param command: subcommand and options used to call git
         :return: the stdout resulting from the git command
         """
+        if self.path:
+            command = ['-C', self._root or self.path] + command
         return run(
             ['git'] + command,
             check=True,
