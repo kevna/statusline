@@ -120,15 +120,15 @@ class TestGit:
             actual = git.ahead_behind()
             assert actual == expected
             assert mock.call_args_list == [
-                call(['rev-list', '@{u}..HEAD']),
-                call(['rev-list', 'HEAD..@{u}']),
+                call(['rev-list', '@{push}..HEAD']),
+                call(['rev-list', 'HEAD..@{upstream}']),
             ]
 
     def test_ahead_behind_noupstream(self, git):
         with patch('statusline.git.Git._count', side_effect=CalledProcessError(128, '')) as mock:
             actual = git.ahead_behind()
             assert actual is None
-            assert mock.call_args == call(['rev-list', '@{u}..HEAD'])
+            assert mock.call_args == call(['rev-list', '@{push}..HEAD'])
 
     @pytest.mark.parametrize('porcelain, expected', (
         ('', Status()),
