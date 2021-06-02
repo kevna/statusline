@@ -139,11 +139,12 @@ class Git:
         :return: AheadBehind comparing local and remote if remote branch exists
         """
         try:
-            ahead = self._count(['rev-list', '@{u}..HEAD'])
-            behind = self._count(['rev-list', 'HEAD..@{u}'])
-            return AheadBehind(ahead, behind)
+            return AheadBehind(
+                ahead = self._count(['rev-list', '@{push}..HEAD']),
+                behind = self._count(['rev-list', 'HEAD..@{upstream}']),
+            )
         except CalledProcessError:
-            # This occurs if there's no upstream repo to compare.
+            # This occurs if there's no upstream repo to compare. (eg. a new branch)
             return None
 
     def status(self) -> Status:
