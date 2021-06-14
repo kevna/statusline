@@ -48,9 +48,9 @@ def test_minify_path_home(mock, path, expected, instance):
 
 @pytest.mark.parametrize('root, stats, path, expected', (
     (
-        '/home/kevna/.local/share/chezmoi',
+        '~/.local/share/chezmoi',
         '\uE0A0master',
-        '/home/kevna/.local/share/chezmoi/private_dot_config/i3',
+        '~/.local/share/chezmoi/private_dot_config/i3',
         '~/.l/s/chezmoi\uE0A0master/p/i3',
     ),
     (
