@@ -51,7 +51,11 @@ class DirectoryMinify:
         :return: the minified path with repository information inserted
         """
         common = os.path.commonpath([path, self.VCS.root_dir])
-        return self.minify_path(common) \
+        keep = 1
+        # Accomodate morktrees located in etc/repo/branch
+        if self.VCS.branch == os.path.basename(common):
+            keep += 1
+        return self.minify_path(common, keep=keep) \
             + self.VCS.short_stats() \
             + self.minify_path(path[len(common):])
 

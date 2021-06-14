@@ -139,11 +139,12 @@ class Git:
         :return: AheadBehind comparing local and remote if remote branch exists
         """
         try:
-            ahead = self._count(['rev-list', '@{u}..HEAD'])
-            behind = self._count(['rev-list', 'HEAD..@{u}'])
-            return AheadBehind(ahead, behind)
+            return AheadBehind(
+                ahead = self._count(['rev-list', '@{push}..HEAD']),
+                behind = self._count(['rev-list', 'HEAD..@{upstream}']),
+            )
         except CalledProcessError:
-            # This occurs if there's no upstream repo to compare.
+            # This occurs if there's no upstream repo to compare. (eg. a new branch)
             return None
 
     def status(self) -> Status:
@@ -174,7 +175,10 @@ class Git:
         Colour coding is done with terminal escapes.
         :return: a short string which summarises repository status
         """
-        result = [self.ICON, self.branch]
+        result = [self.ICON]
+        if not self.root_dir.endswith(self.branch):
+            # No need for branch if worktree is repo-branch or repo/branch
+            result.append(self.branch)
         if ahead_behind := self.ahead_behind():
             result.append(str(ahead_behind))
         else:

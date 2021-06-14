@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -9,7 +9,8 @@ from statusline.git import Git
 @pytest.fixture()
 def instance():
     result = DirectoryMinify()
-    result.VCS = MagicMock(spec=Git)
+    result.VCS = vcs = MagicMock(spec=Git)
+    vcs.branch = 'master'
     return result
 
 
@@ -45,16 +46,32 @@ def test_minify_path_home(mock, path, expected, instance):
     assert actual == expected
 
 
-@patch('statusline.status.DirectoryMinify.minify_path', side_effect=['~/.l/s/chezmoi', '/p/i3'])
-def test__apply_vcs(mock_minify, instance):
-    instance.VCS.root_dir = '/home/kevna/.local/share/chezmoi'
-    instance.VCS.short_stats.return_value = '\uE0A0master'
-    actual = instance._apply_vcs('/home/kevna/.local/share/chezmoi/private_dot_config/i3')
-    assert actual == '~/.l/s/chezmoi\uE0A0master/p/i3'
-    mock_minify.assert_has_calls([
-        call('/home/kevna/.local/share/chezmoi'),
-        call('/private_dot_config/i3')
-    ])
+@pytest.mark.parametrize('root, stats, path, expected', (
+    (
+        '~/.local/share/chezmoi',
+        '\uE0A0master',
+        '~/.local/share/chezmoi/private_dot_config/i3',
+        '~/.l/s/chezmoi\uE0A0master/p/i3',
+    ),
+    (
+        '~/Documents/python/statusline/master',
+        '\uE0A0',
+        '~/Documents/python/statusline/master/statusline',
+        '~/D/p/statusline/master\uE0A0/statusline',
+    ),
+    (
+        '~/Documents/python/statusline-master',
+        '\uE0A0',
+        '~/Documents/python/statusline-master/statusline',
+        '~/D/p/statusline-master\uE0A0/statusline',
+    ),
+))
+@patch('statusline.status._hilight', side_effect=lambda x: x)
+def test__apply_vcs(mock, root, stats, path, expected, instance):
+    instance.VCS.root_dir = root
+    instance.VCS.short_stats.return_value = stats
+    actual = instance._apply_vcs(path)
+    assert actual == expected
 
 
 @patch('statusline.status.os.getcwd', return_value='/home/kevna/.local/share/chezmoi')

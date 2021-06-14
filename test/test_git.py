@@ -120,15 +120,15 @@ class TestGit:
             actual = git.ahead_behind()
             assert actual == expected
             assert mock.call_args_list == [
-                call(['rev-list', '@{u}..HEAD']),
-                call(['rev-list', 'HEAD..@{u}']),
+                call(['rev-list', '@{push}..HEAD']),
+                call(['rev-list', 'HEAD..@{upstream}']),
             ]
 
     def test_ahead_behind_noupstream(self, git):
         with patch('statusline.git.Git._count', side_effect=CalledProcessError(128, '')) as mock:
             actual = git.ahead_behind()
             assert actual is None
-            assert mock.call_args == call(['rev-list', '@{u}..HEAD'])
+            assert mock.call_args == call(['rev-list', '@{push}..HEAD'])
 
     @pytest.mark.parametrize('porcelain, expected', (
         ('', Status()),
@@ -146,9 +146,15 @@ class TestGit:
         assert actual == 1
         assert mock.call_args == call(['stash', 'list'])
 
-    @pytest.mark.parametrize('branch, aheadbehind, status, stashes, expected', (
-        ('master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}master'),
+    @pytest.mark.parametrize('root, branch, aheadbehind, status, stashes, expected', (
+        # Normal clean repo
+        ('~/statusline', 'master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}master'),
+        # Worktree format repo/branch
+        ('~/statusline/master', 'master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}'),
+        # Worktree format repo-branch
+        ('~/statusline-master', 'master', AheadBehind(0, 0), Status(0, 0, 0), 0, f'{Git.ICON}'),
         (
+            '~/statusline',
             'feature/vcs_path_support',
             None,
             Status(0, 0, 0),
@@ -156,6 +162,7 @@ class TestGit:
             f'{Git.ICON}feature/vcs_path_support\001\033[91m\002↯\001\033[0m\002'
         ),
         (
+            '~/statusline',
             'master',
             AheadBehind(1, 0),
             Status(3, 2, 0),
@@ -163,6 +170,7 @@ class TestGit:
             f'{Git.ICON}master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
         ),
         (
+            '~/statusline',
             'master',
             AheadBehind(0, 1),
             Status(0, 0, 5),
@@ -170,15 +178,26 @@ class TestGit:
             f'{Git.ICON}master↓1(\001\033[90m\0025\001\033[0m\002)',
         ),
         (
+            '~/statusline',
             'DI-121-email_validation',
             AheadBehind(3, 2),
             Status(0, 0, 0),
             1,
             f'{Git.ICON}DI-121-email_validation\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
         ),
+        (
+            '~/statusline/DI-121-email_validation',
+            'DI-121-email_validation',
+            AheadBehind(3, 2),
+            Status(0, 0, 0),
+            1,
+            f'{Git.ICON}\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
+        ),
     ))
-    def test_short_stats(self, branch, aheadbehind, status, stashes, expected, git):
+    def test_short_stats(self, root, branch, aheadbehind, status, stashes, expected, git):
         with patch(
+            'statusline.git.Git.root_dir', new_callable=PropertyMock, return_value=root
+        ), patch(
             'statusline.git.Git.branch', new_callable=PropertyMock, return_value=branch
         ), patch(
             'statusline.git.Git.ahead_behind', return_value=aheadbehind

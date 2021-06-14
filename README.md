@@ -44,19 +44,29 @@ Finally if the working dir is a subdirectory of the repository then the remainin
 ~/Documents/python/statusline/statusline/__pycache__ -> ~/D/p/statuslinemaster/s/__pycache__
 ```
 Using git the VCS status section takes the format `master↑1(111){1}` using the following formula:
--  - Git VCS indicator (orange banch icon)
-- master - local branch name (or HEAD for detached head states)
-- ↑1 - number of commits different between local and remote *
-  + ↑ - local commits waiting for push
-  + ↓ - remote commits waiting for pull/merge
-  + ↕ - commits in both directions - this may result in conflicts
-  + ↯ - no upstream branch is set
-- (111) - number of outstanding changes in working copy *
+- `` - Git VCS indicator (orange banch icon)
+- `master` - local branch name (or HEAD for detached head states)
+- `↑1` - number of commits different between local and remote *
+  + `↑` - local commits waiting for push
+  + `↓` - remote commits waiting for pull/merge
+  + `↕` - commits in both directions - this may result in conflicts
+  + `↯` - no upstream branch is set
+- `(111)` - number of outstanding changes in working copy *
   + first number (green) - files with staged changes *
   + second number (red) - files with unstaged changes *
   + third number (grey) - untracked files *
-- {1} - number of stash entries stored *
+- `{1}` - number of stash entries stored *
 
 \* Will not be included if there is no data to show
 
-Local stats are collected when the prompt is generated howecer remote tracking information requires remote tracking be up to date for example by using `git fetch`.
+Local stats are collected when the prompt is generated however remote tracking information requires remote tracking be up to date for example by using `git fetch`.
+
+### Worktree Support
+Worktrees are supported using three possible formats:
+```
+/home/currentuser/Documents/python/statusline/master -> ~/D/p/statusline/master
+/home/currentuser/Documents/python/statusline-master -> ~/D/p/statusline-master
+/home/currentuser/Documents/python/statusline2 -> ~/D/p/statuslinemaster
+```
+If the branch name appears at the end of the working dir it will be dropped from repo stats to avoid duplication.
+In addition, when the basename and branchname match then an additional parent directory is left at full-length.
