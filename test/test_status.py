@@ -73,6 +73,22 @@ def test__apply_vcs(mock, root, stats, path, expected, instance):
     actual = instance._apply_vcs(path)
     assert actual == expected
 
+@pytest.mark.parametrize('root, stats, path, expected', (
+    (
+        '~/Documents/python/statusline/feature/newfeature',
+        '\uE0A0',
+        '~/Documents/python/statusline/feature/newfeature/statusline',
+        '~/D/p/s/f/newfeature\uE0A0/statusline',
+    ),
+))
+@patch('statusline.status._hilight', side_effect=lambda x: x)
+def test__apply_vcs_with_branch(mock, root, stats, path, expected, instance):
+    instance.VCS.root_dir = root
+    instance.VCS.branch = 'feature/newfeature'
+    instance.VCS.short_stats.return_value = stats
+    actual = instance._apply_vcs(path)
+    assert actual == expected
+
 
 @patch('statusline.status.os.getcwd', return_value='/home/kevna/.local/share/chezmoi')
 @patch('statusline.status.DirectoryMinify._apply_vcs', return_value='~/.l/s/chezmoi')
