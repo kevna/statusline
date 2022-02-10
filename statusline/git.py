@@ -114,11 +114,19 @@ class Git:
     @property
     def branch(self) -> str:
         """Property for the current branch name.
+
+        Using symbolic-ref reads HEAD directly which can point to a
+        branch even if it does not yet have any commits accossiated with it.
+        Wheras in this case rev-parse will fail since it reverse-engineers
+        the ref from the current commit.
         :return: the current local branch name
         """
-        return self._run_command(
-            ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
-        ).strip()
+        try:
+            return self._run_command(
+                ['symbolic-ref', '-q', '--short', 'HEAD']
+            ).strip()
+        except CalledProcessError:
+            return 'HEAD'
 
     @property
     def last_fetch(self) -> int:

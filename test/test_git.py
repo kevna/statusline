@@ -89,7 +89,7 @@ class TestGit:
     def test_branch(self, mock, git):
         assert git.branch == 'master'
         assert mock.call_args == call(
-            ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
+            ['symbolic-ref', '-q', '--short', 'HEAD']
         )
 
     @patch('statusline.git.path.getmtime', return_value=1604363715.999)
