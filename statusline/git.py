@@ -1,11 +1,15 @@
 #!/usr/bin/python3
 from os import path
-from subprocess import run, CalledProcessError
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, cast
 
 from ansi.colour import fg, bg, fx  # type: ignore
+from pygit2 import (
+    Repository,
+    GIT_STATUS_INDEX_NEW, GIT_STATUS_INDEX_MODIFIED, GIT_STATUS_INDEX_DELETED,
+    GIT_STATUS_WT_NEW, GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_DELETED,
+)
 
 from statusline import ansi_patch
 
@@ -63,6 +67,7 @@ class Git:
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
 
     def __init__(self):
+        self._repo = Repository('.')
         self._root: Optional[str] = None
 
     def __bool__(self):
@@ -70,32 +75,8 @@ class Git:
         Testing for .git is faster but only works in project root
         alernatively we'll use the git tool.
         """
-        try:
-            return path.exists('.git') \
-                or bool(self.root_dir)
-        except CalledProcessError:
-            return False
-
-    @staticmethod
-    def _run_command(command: list) -> str:
-        """Run command and handle failures quietly.
-        :param command: subcommand and options used to call git
-        :return: the stdout resulting from the git command
-        """
-        return run(
-            ['git'] + command,
-            check=True,
-            capture_output=True
-        ).stdout.decode('utf-8')
-
-    def _count(self, command: list) -> int:
-        """Helper to count the number of records resulted from running a command.
-        :param command: the command that will be passed down to _run_command
-        :return: the count of lines returned from running the given command
-        """
-        rows = self._run_command(command).split('\n')
-        rows.remove('')
-        return len(rows)
+        return path.exists('.git') \
+            or bool(self.root_dir)
 
     @property
     def root_dir(self) -> str:
@@ -106,9 +87,7 @@ class Git:
         :return: the absolute path to the repository root
         """
         if not self._root:
-            self._root = self._run_command(
-                ['rev-parse', '--show-toplevel']
-            ).strip()
+            self._root = self._repo.workdir
         return self._root
 
     @property
@@ -116,9 +95,7 @@ class Git:
         """Property for the current branch name.
         :return: the current local branch name
         """
-        return self._run_command(
-            ['rev-parse', '--symbolic-full-name', '--abbrev-ref', 'HEAD']
-        ).strip()
+        return cast(str, self._repo.head.shorthand)
 
     @property
     def last_fetch(self) -> int:
@@ -138,37 +115,44 @@ class Git:
         """Count unsynched commits between current branch and it's remote.
         :return: AheadBehind comparing local and remote if remote branch exists
         """
+        head = self._repo.head
         try:
-            return AheadBehind(
-                ahead = self._count(['rev-list', '@{push}..HEAD']),
-                behind = self._count(['rev-list', 'HEAD..@{upstream}']),
-            )
-        except CalledProcessError:
-            # This occurs if there's no upstream repo to compare. (eg. a new branch)
+            remote = self._repo.lookup_branch(self.branch).remote_name
+        except ValueError:
             return None
+        return AheadBehind(self._repo.ahead_behind(head, remote))
+
+    @staticmethod
+    def _match_flag(flag, matches) -> bool:
+        for case in matches:
+            if flag & case == case:
+                return True
+        return False
 
     def status(self) -> Status:
         """Count the number of changes files in the various statuses git tracks.
         :return: A Status which describes the current state of working copy
         """
-        output = self._run_command(['status', '--porcelain'])
+        status = self._repo.status()
         result: dict = defaultdict(int)
-        for line in output.split('\n'):
-            if line:
-                if line.startswith('??'):
-                    result['untracked'] += 1
-                else:
-                    if line[0] != ' ':
-                        result['staged'] += 1
-                    if line[1] != ' ':
-                        result['unstaged'] += 1
+        for _, flags in status.items():
+            if self._match_flag(flags, [GIT_STATUS_WT_NEW]):
+                result['untracked'] += 1
+            if self._match_flag(flags, [GIT_STATUS_WT_MODIFIED, GIT_STATUS_WT_DELETED]):
+                result['unstaged'] += 1
+            if self._match_flag(flags, [
+                GIT_STATUS_INDEX_NEW,
+                GIT_STATUS_INDEX_MODIFIED,
+                GIT_STATUS_INDEX_DELETED,
+            ]):
+                result['staged'] += 1
         return Status(**result)
 
     def stashes(self) -> int:
         """Count the number of records in the git stash.
         :return: current count of stash records
         """
-        return self._count(['stash', 'list'])
+        return len(self._repo.listall_stashes())
 
     def short_stats(self) -> str:
         """Generate a short text summary of the repository status.
