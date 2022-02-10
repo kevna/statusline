@@ -8,8 +8,9 @@ authors = ["Aaron Moore"]
 statusline = 'statusline.__main__:main'
 
 [tool.poetry.dependencies]
-python = ">=3.6,<4"
+python = ">=3.7,<4"
 ansi = "^0.1"
+pygit2 = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"
