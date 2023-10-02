@@ -15,9 +15,9 @@ def git():
 class TestAheadBehind:
     @pytest.mark.parametrize('args, expected', (
         ((), ''),
-        ((4, 0), '↑4'),
-        ((0, 2), '↓2'),
-        ((2, 4), '\001\033[30;101m\002↕6\001\033[0m\002'),
+        ((4, 0), '\001\033[32m\002↑4\001\033[0m\002'),
+        ((0, 2), '\001\033[31m\002↓2\001\033[0m\002'),
+        ((2, 4), '\001\033[32m\002↑2\001\033[31m\002↓4\001\033[0m\002'),
     ))
     def test_str(self, args, expected):
         ahead_behind = AheadBehind(*args)
@@ -39,12 +39,12 @@ class TestStatus:
 
     @pytest.mark.parametrize('args, expected', (
         ((), ''),
-        ((1, 0, 0, 0), '\001\033[91m\0021\001\033[0m\002'),
+        ((1, 0, 0, 0), '\001\033[91;1m\0021\001\033[0m\002'),
         ((0, 1, 0, 0), '\001\033[32m\0021\001\033[0m\002'),
         ((0, 1, 0, 0), '\001\033[32m\0021\001\033[0m\002'),
         ((0, 0, 1, 0), '\001\033[31m\0021\001\033[0m\002'),
         ((0, 0, 0, 1), '\001\033[90m\0021\001\033[0m\002'),
-        ((1, 5, 7, 2), '\001\033[91m\0021\001\033[32m\0025\001\033[31m\0027\001\033[90m\0022\001\033[0m\002'),
+        ((1, 5, 7, 2), '\001\033[91;1m\0021\001\033[0m\002\001\033[32m\0025\001\033[31m\0027\001\033[90m\0022\001\033[0m\002'),
     ))
     def test_str(self, args, expected):
         status = Status(*args)
@@ -137,27 +137,27 @@ u UU N... 100644 100644 100644 100644 ac51efdc3df4f4fd328d1a02ad05331d8e2c9111 3
         (
             '~/statusline',
             Git('feature/vcs_path_support', None, Status()),
-            f'{Git.ICON}feature/vcs_path_support\001\033[91m\002↯\001\033[0m\002'
+            f'{Git.ICON}feature/vcs_path_support\001\033[91;1m\002↯\001\033[0m\002'
         ),
         (
             '~/statusline',
             Git('master', AheadBehind(1, 0), Status(0, 3, 2, 0)),
-            f'{Git.ICON}master↑1(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
+            f'{Git.ICON}master\001\033[32m\002↑1\001\033[0m\002(\001\033[32m\0023\001\033[31m\0022\001\033[0m\002)',
         ),
         (
             '~/statusline',
             Git('master', AheadBehind(0, 1), Status(untracked=5)),
-            f'{Git.ICON}master↓1(\001\033[90m\0025\001\033[0m\002)',
+            f'{Git.ICON}master\001\033[31m\002↓1\001\033[0m\002(\001\033[90m\0025\001\033[0m\002)',
         ),
         (
             '~/statusline',
             Git('DI-121-email_validation', AheadBehind(3, 2), Status(), 1),
-            f'{Git.ICON}DI-121-email_validation\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
+            f'{Git.ICON}DI-121-email_validation\001\033[32m\002↑3\001\033[31m\002↓2\001\033[0m\002{{1}}',
         ),
         (
             '~/statusline/DI-121-email_validation',
             Git('DI-121-email_validation', AheadBehind(3, 2), Status(), 1),
-            f'{Git.ICON}\001\033[30;101m\002↕5\001\033[0m\002{{1}}',
+            f'{Git.ICON}\001\033[32m\002↑3\001\033[31m\002↓2\001\033[0m\002{{1}}',
         ),
     ))
     def test_short_stats(self, root, git, expected):

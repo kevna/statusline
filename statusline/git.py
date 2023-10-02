@@ -19,13 +19,14 @@ class AheadBehind:
 
     def __str__(self):
         """Generate a short text summary of how far ahead/behind the remote."""
-        if self.ahead and self.behind:
-            return f'{fg.black+bg.brightred}↕{self.ahead+self.behind}{fx.reset}'
+        result = []
         if self.ahead:
-            return f'↑{self.ahead}'
+            result.append(f'{fg.green}↑{self.ahead}')
         if self.behind:
-            return f'↓{self.behind}'
-        return ''
+            result.append(f'{fg.red}↓{self.behind}')
+        if result:
+            result.append(fx.reset)
+        return ''.join(map(str, result))
 
 
 @dataclass
@@ -46,14 +47,14 @@ class Status:
         """Generate a short text summary of changes in working copy."""
         result = []
         if self.unmerged:
-            result.extend([fg.brightred, self.unmerged])
+            result.extend([fg.brightred+fx.bold, self.unmerged, fx.reset])
         if self.staged:
             result.extend([fg.green, self.staged])
         if self.unstaged:
             result.extend([fg.red, self.unstaged])
         if self.untracked:
             result.extend([fg.brightblack, self.untracked])
-        if result:
+        if result and result[-1] != fx.reset:
             result.append(fx.reset)
         return ''.join(map(str, result))
 
@@ -166,7 +167,7 @@ class Git:
         if ahead_behind := self.ahead_behind:
             result.append(str(ahead_behind))
         else:
-            result.append(f'{fg.brightred}↯{fx.reset}')
+            result.append(f'{fg.brightred+fx.bold}↯{fx.reset}')
         if status := self.status:
             result.append(f'({status})')
         if stashes := self.stashes:
