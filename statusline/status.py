@@ -18,7 +18,7 @@ def _hilight(text: str) -> str:
 
 class DirectoryMinify:
     """Handle directory shortening and applying VCS."""
-    VCS = Git()
+    VCS = Git.from_cmd()
 
     @staticmethod
     def _minify_dir(name: str, regex: re.Pattern = re.compile(r'^(\W*\w)')) -> str:

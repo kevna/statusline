@@ -32,6 +32,7 @@ class AheadBehind:
 class Status:
     """Model for the current working status of the repository."""
 
+    unmerged: int = 0
     staged: int = 0
     unstaged: int = 0
     untracked: int = 0
@@ -39,11 +40,13 @@ class Status:
     def __bool__(self):
         """Test if there is status information in this object to display."""
         # Tested in order of likelyhood for performance
-        return bool(self.unstaged or self.untracked or self.staged)
+        return bool(self.unstaged or self.untracked or self.staged or self.unmerged)
 
     def __str__(self):
         """Generate a short text summary of changes in working copy."""
         result = []
+        if self.unmerged:
+            result.extend([fg.brightred, self.unmerged])
         if self.staged:
             result.extend([fg.green, self.staged])
         if self.unstaged:
@@ -55,15 +58,50 @@ class Status:
         return ''.join(map(str, result))
 
 
+@dataclass
 class Git:
     """Get information about the status of the current git repository."""
 
     # branch logo in git color #f14e32 (colour 202 is ideal)
     # rgb.rgb256(241, 78, 50)
     ICON = f'{ansi_patch.colour256(202)}\uE0A0{fx.reset}'
+    branch: str
+    ahead_behind: Optional[AheadBehind]
+    status: Status
+    stashes: int = 0
+    _root = None
 
-    def __init__(self):
-        self._root: Optional[str] = None
+    @classmethod
+    def from_str(cls, porcelain: str):
+        branch = ''
+        ab = None
+        status = Status()
+        stashes = 0
+        for line in porcelain.splitlines():
+            match line.split(' '):
+                case ('#', 'branch.head', *name):
+                    branch = ' '.join(name)
+                case ('#', 'branch.ab', ahead, behind):
+                    ab = AheadBehind(int(ahead), int(behind[1:]))
+                case ('#', 'stash', count):
+                    stashes += int(count)
+                case ('u', *_):
+                    status.unmerged += 1
+                case ('1', file_stat, *_) | ('2', file_stat, *_):
+                    if file_stat[0] != '.':
+                        status.staged += 1
+                    if file_stat[1] != '.':
+                        status.unstaged += 1
+                case ('?', *_):
+                    status.untracked += 1
+        return cls(branch=branch, ahead_behind=ab, status=status, stashes=stashes)
+
+    @classmethod
+    def from_cmd(cls):
+        porcelain = cls._run_command(
+            ['status', '--porcelain=v2', '--branch', '--show-stash']
+        )
+        return cls.from_str(porcelain)
 
     def __bool__(self):
         """Simple check for being in a git repo.
@@ -88,15 +126,6 @@ class Git:
             capture_output=True
         ).stdout.decode('utf-8')
 
-    def _count(self, command: list) -> int:
-        """Helper to count the number of records resulted from running a command.
-        :param command: the command that will be passed down to _run_command
-        :return: the count of lines returned from running the given command
-        """
-        rows = self._run_command(command).split('\n')
-        rows.remove('')
-        return len(rows)
-
     @property
     def root_dir(self) -> str:
         """Property for the root directory.
@@ -112,23 +141,6 @@ class Git:
         return self._root
 
     @property
-    def branch(self) -> str:
-        """Property for the current branch name.
-
-        Using symbolic-ref reads HEAD directly which can point to a
-        branch even if it does not yet have any commits accossiated with it.
-        Wheras in this case rev-parse will fail since it reverse-engineers
-        the ref from the current commit.
-        :return: the current local branch name
-        """
-        try:
-            return self._run_command(
-                ['symbolic-ref', '-q', '--short', 'HEAD']
-            ).strip()
-        except CalledProcessError:
-            return 'HEAD'
-
-    @property
     def last_fetch(self) -> int:
         """Get the timestamp of the last git fetch.
         This information could be used to:
@@ -142,42 +154,6 @@ class Git:
         """
         return int(path.getmtime(path.join(self.root_dir, '.git/FETCH_HEAD')))
 
-    def ahead_behind(self) -> Optional[AheadBehind]:
-        """Count unsynched commits between current branch and it's remote.
-        :return: AheadBehind comparing local and remote if remote branch exists
-        """
-        try:
-            return AheadBehind(
-                ahead = self._count(['rev-list', '@{push}..HEAD']),
-                behind = self._count(['rev-list', 'HEAD..@{upstream}']),
-            )
-        except CalledProcessError:
-            # This occurs if there's no upstream repo to compare. (eg. a new branch)
-            return None
-
-    def status(self) -> Status:
-        """Count the number of changes files in the various statuses git tracks.
-        :return: A Status which describes the current state of working copy
-        """
-        output = self._run_command(['status', '--porcelain'])
-        result: dict = defaultdict(int)
-        for line in output.split('\n'):
-            if line:
-                if line.startswith('??'):
-                    result['untracked'] += 1
-                else:
-                    if line[0] != ' ':
-                        result['staged'] += 1
-                    if line[1] != ' ':
-                        result['unstaged'] += 1
-        return Status(**result)
-
-    def stashes(self) -> int:
-        """Count the number of records in the git stash.
-        :return: current count of stash records
-        """
-        return self._count(['stash', 'list'])
-
     def short_stats(self) -> str:
         """Generate a short text summary of the repository status.
         Colour coding is done with terminal escapes.
@@ -187,13 +163,13 @@ class Git:
         if not self.root_dir.endswith(self.branch):
             # No need for branch if worktree is repo-branch or repo/branch
             result.append(self.branch)
-        if ahead_behind := self.ahead_behind():
+        if ahead_behind := self.ahead_behind:
             result.append(str(ahead_behind))
         else:
             result.append(f'{fg.brightred}↯{fx.reset}')
-        if status := self.status():
+        if status := self.status:
             result.append(f'({status})')
-        if stashes := self.stashes():
+        if stashes := self.stashes:
             result.append(f'{{{stashes}}}')
         return ''.join(result)
 
